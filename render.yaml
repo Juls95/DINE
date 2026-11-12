@@ -1,0 +1,25 @@
+# Static site. The build only reads committed files in data/ and needs no secrets.
+# Deploys only after CI passes on main; pushing is the manual weekly review step.
+services:
+  - type: web
+    name: near-rdc
+    runtime: static
+    branch: main
+    autoDeployTrigger: checksPass
+    buildCommand: corepack enable && pnpm install --frozen-lockfile && pnpm bul:build
+    staticPublishPath: dist
+    envVars:
+      - key: NODE_VERSION
+        value: 22.21.1
+      - key: DATA_MODE
+        value: live
+    headers:
+      - path: /*
+        name: X-Content-Type-Options
+        value: nosniff
+      - path: /*
+        name: Referrer-Policy
+        value: strict-origin-when-cross-origin
+      - path: /*
+        name: Content-Security-Policy
+        value: "default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self'; connect-src 'self'"
