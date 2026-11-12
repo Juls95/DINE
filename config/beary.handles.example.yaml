@@ -1,0 +1,10 @@
+# Copy to config/beary.handles.yaml and replace with the accounts Beary should follow.
+# tier: official | core | ecosystem | analyst  (weights are documented in src/beary/score.ts)
+# Max 20 handles per x_search request; longer lists are batched automatically.
+handles:
+  - handle: replace_me_official
+    tier: official
+    note: Official protocol account
+  - handle: replace_me_analyst
+    tier: analyst
+    note: Independent analyst with a public track record
