@@ -1,0 +1,30 @@
+# Dependencies & builds
+node_modules/
+dist/
+coverage/
+*.tsbuildinfo
+
+# Secrets
+.env
+.env.*
+!.env.example
+*.pem
+gcp-*.json
+service-account*.json
+
+# Third-party material and the unrelated pre-hackathon trading project (never public)
+/docsReplicate/
+/BLUEPRINT.md
+/data/*.csv
+/data/live_state.json
+
+# Mock pipeline output: simulated numbers must never be committed as evidence
+/data/mock/
+/examples/
+
+# Generated site bundle
+/site/public/data/
+
+# OS / editor
+.DS_Store
+*.log
