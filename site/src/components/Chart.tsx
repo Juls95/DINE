@@ -1,6 +1,20 @@
 import { useEffect, useRef, useState } from "react";
 import type { ChartView } from "../lib/bundle";
 
+const STONE = {
+  background: "transparent",
+  view: { stroke: "transparent" },
+  axis: {
+    labelColor: "#6b5c48",
+    titleColor: "#6b5c48",
+    gridColor: "rgba(42,33,24,0.08)",
+    domainColor: "rgba(42,33,24,0.16)",
+    tickColor: "rgba(42,33,24,0.16)",
+    labelFontSize: 11,
+  },
+  legend: { labelColor: "#6b5c48", titleColor: "#6b5c48", orient: "bottom" },
+};
+
 export function Chart({ chart }: { chart: ChartView }) {
   const ref = useRef<HTMLDivElement>(null);
   const [error, setError] = useState<string | null>(null);
@@ -8,10 +22,15 @@ export function Chart({ chart }: { chart: ChartView }) {
   useEffect(() => {
     let cancelled = false;
     let finalize: (() => void) | undefined;
+    const spec = {
+      ...chart.spec,
+      background: "transparent",
+      config: { ...(chart.spec.config as object | undefined), ...STONE },
+    };
     import("vega-embed")
       .then(({ default: embed }) => {
         if (cancelled || !ref.current) return undefined;
-        return embed(ref.current, chart.spec as never, {
+        return embed(ref.current, spec as never, {
           actions: { export: true, source: false, compiled: false, editor: false },
           renderer: "svg",
           ast: true,

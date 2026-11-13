@@ -1,9 +1,10 @@
 /** @jest-environment jsdom */
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { App, MockBanner, Page } from "./App";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { Markdown } from "./lib/markdown";
 import { parseBundle, type Bundle } from "./lib/bundle";
+import { verdictCopy } from "./lib/verdict";
 
 jest.mock("vega-embed", () => ({ __esModule: true, default: jest.fn().mockResolvedValue({ finalize: jest.fn() }) }));
 
@@ -28,11 +29,42 @@ const bundle: Bundle = {
 };
 
 describe("site", () => {
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
   it("shows the simulated-data banner only in mock mode", () => {
     const { rerender } = render(<MockBanner mode="mock" />);
     expect(screen.getByRole("status")).toHaveTextContent("DATOS SIMULADOS");
     rerender(<MockBanner mode="live" />);
     expect(screen.queryByRole("status")).toBeNull();
+  });
+
+  it("landing states the thesis verdict and the reasoning of each bot", () => {
+    render(<Page route="/" bundle={bundle} />);
+    expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent(/tesis se sostiene/i);
+    fireEvent.click(screen.getByRole("button", { name: /respaldar/i }));
+    expect(screen.getByRole("button", { name: /respaldar/i })).toHaveAttribute("aria-pressed", "true");
+    fireEvent.click(screen.getByRole("button", { name: /comentar/i }));
+    fireEvent.change(screen.getByLabelText(/comentario/i), { target: { value: "¿y las validaciones?" } });
+    fireEvent.click(screen.getByRole("button", { name: /publicar/i }));
+    expect(screen.getByText("¿y las validaciones?")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Beary" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Bison" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Bul" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /expediente de Beary/i })).toHaveAttribute("href", "#/agentes/beary");
+    expect(screen.getAllByText("hace algo")).toHaveLength(3);
+    expect(screen.getByText(/i · el problema/i)).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /una tesis, trazada/i })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /cada veredicto queda público/i })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /leer la tesis/i })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /auditar a un pensador/i })).toBeInTheDocument();
+  });
+
+  it("verdictCopy never treats 'no respaldada' as a pass", () => {
+    expect(verdictCopy("no respaldada por los datos actuales", "contracción").title).toMatch(/no se sostiene/i);
+    expect(verdictCopy("respaldada", "expansión").title).toMatch(/se sostiene\./i);
+    expect(verdictCopy("parcialmente respaldada", "lateral").title).toMatch(/a medias/i);
   });
 
   it("Ágora evaluates each agent separately and shows the debate table", () => {
