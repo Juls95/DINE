@@ -20,6 +20,9 @@ const bundle: Bundle = {
   thesis_md: "# Thesis\n\n## 1. Claim\n\nKey **text**.",
   hypothesis_verdict: "supported by current data",
   regime: "expansion",
+  stance: "constructive on direction; timing is not confirmed",
+  technical_bias: "neutral",
+  desk: null,
   metrics: {},
   charts: [{ id: "daa", title: "Daily active accounts", agent: "bison", query_file: "q.sql", endpoint: null, query_sql: "SELECT 1", sentence: "Plain sentence.", spec: {} }],
   divergences: [{ week: "2026-W44", from: "2026-10-26", reconstructed: true, sentiment_index: 0.7, sentiment_delta: 0.5, onchain_change_pct: -8, quadrant: "mirage" }],
@@ -110,6 +113,24 @@ describe("site", () => {
     expect(screen.getByRole("heading", { name: /notion dossier/i })).toBeInTheDocument();
     expect(screen.getByRole("cell", { name: "NEAR Intents" })).toBeInTheDocument();
     expect(screen.getAllByText(/Omni exploit/).length).toBeGreaterThan(0);
+  });
+
+  it("social page lists desk observations as claims, and the verdict card shows stance and technical bias", () => {
+    const withDesk: Bundle = {
+      ...bundle,
+      desk: {
+        mode: "mock", generated_at: "2026-11-14T06:00:00.000Z", source: "notion", desks: ["arkham", "Zeneca"], figures: [],
+        observations: [{ id: "whale_long", date: "2026-10-26", desk: "arkham", topic: "positioning", claim: "A whale holds a leveraged NEAR long." }],
+      },
+    };
+    const social = render(<Page route="/social" bundle={withDesk} />);
+    expect(screen.getByRole("heading", { name: /desk observations/i })).toBeInTheDocument();
+    expect(screen.getByRole("cell", { name: "A whale holds a leveraged NEAR long." })).toBeInTheDocument();
+    expect(screen.getByText(/claims by public accounts, not measurements/i)).toBeInTheDocument();
+    social.unmount();
+    render(<Page route="/" bundle={withDesk} />);
+    expect(screen.getByText("constructive on direction; timing is not confirmed")).toBeInTheDocument();
+    expect(screen.getByText("neutral")).toBeInTheDocument();
   });
 
   it("dashboard pairs every chart with its sentence and query", () => {

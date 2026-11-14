@@ -9,12 +9,16 @@ import type { Inputs, BisonData } from "../bul/load";
 import { createRng } from "./prng";
 import { mockBison } from "./bison";
 import { mockBeary } from "./beary";
+import { mockDesk, mockNotion } from "./desk";
+import { mockPrice } from "./price";
 
 const log = createLogger("mock");
 
 /** Fixed anchor so the simulated scenario (and its tests) never drift. */
-export const MOCK_END = "2026-11-09";
+export const MOCK_END = "2026-11-14";
 const SEED = 20261109;
+const PRICE_SEED = 20261180;
+const PRICE_DAYS = 420;
 
 /** The whole simulated scenario in memory; `main` only persists it. */
 export function buildMockInputs(root = dataRoot("mock")): Inputs {
@@ -33,7 +37,11 @@ export function buildMockInputs(root = dataRoot("mock")): Inputs {
   };
   const bearyDaily = mockBeary(rng, MOCK_END, 5, addDays(MOCK_END, -7));
   const bearyWeekly = [...new Set(bearyDaily.map((d) => weekStart(d.date)))].map((monday) => buildWeekly(bearyDaily, monday));
-  return { mode: "mock", manifest, bison: datasets as BisonData, bearyDaily, bearyWeekly, bearyNotion: null };
+  const generatedAt = `${MOCK_END}T06:00:00.000Z`;
+  return {
+    mode: "mock", manifest, bison: datasets as BisonData, bearyDaily, bearyWeekly,
+    bearyNotion: mockNotion(generatedAt), desk: mockDesk(generatedAt), price: mockPrice(PRICE_SEED, MOCK_END, PRICE_DAYS, generatedAt),
+  };
 }
 
 function main() {
@@ -46,6 +54,12 @@ function main() {
   writeJson(`${root}/raw/manifest.json`, inputs.manifest);
   for (const d of inputs.bearyDaily) writeJson(`${root}/beary/daily/${d.date}.json`, d);
   for (const w of inputs.bearyWeekly) writeJson(`${root}/beary/weekly/${w.week}.json`, w);
+  writeJson(`${root}/beary/notion/near.json`, inputs.bearyNotion);
+  writeJson(`${root}/beary/desk/near.json`, inputs.desk);
+  if (inputs.price) {
+    writeJson(`${root}/raw/price/near.json`, inputs.price.near);
+    writeJson(`${root}/raw/price/btc.json`, inputs.price.btc);
+  }
   log.info("mock data written", { root, days: inputs.bearyDaily.length });
 }
 

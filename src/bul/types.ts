@@ -1,6 +1,7 @@
 import type { DataMode } from "../schemas/common";
+import type { DeskObservation, MetricUnit } from "../schemas/market";
 
-export type MetricUnit = "count" | "pct" | "pp" | "usd" | "usd2" | "corr" | "days" | "index" | "ratio";
+export type { MetricUnit };
 
 /** Where a number comes from. Shown next to every figure so readers know what they can verify. */
 export type Provenance = "computed" | "simulated" | "desk" | "cited";
@@ -31,6 +32,9 @@ export type Divergence = {
 
 export type LagPoint = { lag: number; forward: number | null; reverse: number | null; n: number };
 
+export type ConfluenceItem = { id: string; text: string; met: boolean | null };
+export type Npoc = { created: string; level: number; side: "upper" | "lower" };
+
 export type Analysis = {
   mode: DataMode;
   generated_at: string;
@@ -41,4 +45,8 @@ export type Analysis = {
   spikes: SpikeEvent[];
   divergences: Divergence[];
   lag: LagPoint[];
+  confluence: ConfluenceItem[];
+  npocs: Npoc[];
+  notion_themes: { id: string; title: string; count: number }[];
+  desk_observations: DeskObservation[];
 };

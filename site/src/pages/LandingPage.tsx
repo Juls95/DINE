@@ -119,6 +119,14 @@ export function LandingPage({ bundle }: { bundle: Bundle }) {
             <strong className="verdict-main">{bundle.hypothesis_verdict ?? "no data"}</strong>
             <dl className="verdict-dl">
               <div>
+                <dt>Stance</dt>
+                <dd>{bundle.stance ?? "—"}</dd>
+              </div>
+              <div>
+                <dt>Timing</dt>
+                <dd>{bundle.technical_bias ?? "—"}</dd>
+              </div>
+              <div>
                 <dt>Regime</dt>
                 <dd>{bundle.regime ?? "—"}</dd>
               </div>

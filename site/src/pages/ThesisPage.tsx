@@ -10,6 +10,14 @@ export function ThesisPage({ bundle }: { bundle: Bundle }) {
           <strong>{bundle.hypothesis_verdict ?? "no data"}</strong>
         </div>
         <div>
+          <span className="eyebrow">Stance</span>
+          <strong>{bundle.stance ?? "no data"}</strong>
+        </div>
+        <div>
+          <span className="eyebrow">Technical bias</span>
+          <strong>{bundle.technical_bias ?? "no data"}</strong>
+        </div>
+        <div>
           <span className="eyebrow">Adoption regime</span>
           <strong>{bundle.regime ?? "no data"}</strong>
         </div>

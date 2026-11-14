@@ -1,7 +1,10 @@
 import { addDays, weekStart } from "../lib/dates";
 import { PARAMS, SUCCESS_STATUS_PREFIX } from "./params";
 import { laggedCorrelation, logDiff, mean, median, movingAverage, pctChange, sum } from "./stats";
+import { registerDesk } from "./desk";
+import { EXTERNAL_FIGURES, EXTERNAL_NOTE, EXTERNAL_REFERENCES, externalValues } from "./external";
 import type { Inputs } from "./load";
+import { computeTechnical, registerTechnical } from "./technical";
 import type { Analysis, Divergence, LagPoint, Metric, Provenance, SpikeEvent } from "./types";
 
 const W = PARAMS.window_days;
@@ -205,8 +208,37 @@ export function analyze(inputs: Inputs, generatedAt: string): Analysis {
   const verdict = shift && leads ? "supported by current data" : shift || leads ? "partially supported" : "not supported by current data";
   const strength = (r: number | null) => (r === null ? "no data" : Math.abs(r) < 0.3 ? "weak" : Math.abs(r) < 0.6 ? "moderate" : "strong");
 
+  const technical = computeTechnical(inputs.price, regime);
+  registerTechnical(technical, add, inputs.mode);
+  const desk = registerDesk(inputs.desk, inputs.bearyNotion, externalValues(), add);
+  for (const f of EXTERNAL_FIGURES) add(f.id, f.label, f.value, f.unit, "External reference thesis (relayed)", EXTERNAL_NOTE, "cited");
+
+  const bias = technical.labels.technical_bias ?? "no data";
+  const stance =
+    verdict === "not supported by current data"
+      ? "no edge: the on-chain claim is not supported"
+      : verdict === "partially supported"
+        ? "unproven: watch the tripwires"
+        : bias === "constructive"
+          ? "constructive: direction and timing align"
+          : bias === "no data"
+            ? "constructive on direction; timing cannot be read without price data"
+            : "constructive on direction; timing is not confirmed";
+  const sim = inputs.mode === "mock";
+  const provenanceLabels: [string, string][] = [
+    ["src_chain", sim ? "simulated" : "real (live)"],
+    ["src_price", inputs.price ? (sim ? "simulated, scaled to a desk price print" : `real (${technical.source})`) : "not available"],
+    ["src_notion", inputs.bearyNotion ? (sim ? "real rows, paraphrased sample" : "real (live)") : "not available"],
+    ["src_desk", inputs.desk ? (sim ? "real notes, curated sample" : "real, curated") : "not available"],
+    ["src_x", sim ? "simulated" : "real (reconstructed weeks are marked)"],
+    ["ref_btc_date", EXTERNAL_REFERENCES.find((r) => r.id === "btc_alert")?.date ?? "unknown"],
+  ];
+
   const labels = Object.fromEntries(
     [
+      ...Object.entries(technical.labels),
+      ...provenanceLabels,
+      ["stance", stance],
       ["mode", inputs.mode === "mock" ? "SIMULATED (mock)" : "real data (live)"],
       ["generated_at", generatedAt.slice(0, 10)],
       ["last_block_date", manifest.freshness.last_block_date ?? "unknown"],
@@ -230,5 +262,9 @@ export function analyze(inputs: Inputs, generatedAt: string): Analysis {
     spikes,
     divergences: div,
     lag,
+    confluence: technical.confluence,
+    npocs: technical.npocs,
+    notion_themes: desk.themes,
+    desk_observations: inputs.desk?.observations ?? [],
   };
 }

@@ -30,6 +30,38 @@ export function selectEvidence(a: Analysis): Item[] {
   if (regime === "expansion") items.push({ stance: "for", text: "The adoption regime is expansion: the thirty-day median of active accounts is {{metric:daa_30d_vs_90d_pct}} above the ninety-day median." });
   else if (regime) items.push({ stance: "against", text: "The adoption regime is {{label:regime}}: the thirty-day median of active accounts is {{metric:daa_30d_vs_90d_pct}} against the ninety-day median." });
 
+  const bias = a.labels.technical_bias?.value;
+  const score = v(a, "confluence_score");
+  if (score !== null && bias === "constructive") {
+    items.push({ stance: "for", text: "Technical confluence is constructive: {{metric:confluence_score}} of {{metric:confluence_total}} checks are met (threshold {{param:confluence_constructive_min}})." });
+  } else if (score !== null && bias) {
+    items.push({ stance: "against", text: "Technical confluence is {{label:technical_bias}}: only {{metric:confluence_score}} of {{metric:confluence_total}} checks are met (constructive needs {{param:confluence_constructive_min}})." });
+  }
+  const rs = v(a, "rs_vs_btc_30d_pp");
+  if (rs !== null) {
+    items.push(rs >= 0
+      ? { stance: "for", text: "NEAR outperformed BTC by {{metric:rs_vs_btc_30d_pp}} over {{param:rs_lookback_days}} days." }
+      : { stance: "against", text: "NEAR lagged BTC by {{metric:rs_vs_btc_30d_pp}} over {{param:rs_lookback_days}} days." });
+  }
+  const slow = v(a, "near_vs_sma_slow_pct");
+  if (slow !== null && slow < 0) items.push({ stance: "against", text: "NEAR closes {{metric:near_vs_sma_slow_pct}} from its slow daily average, so the long-term trend has not turned." });
+  if (v(a, "near_beta_90d") !== null) {
+    items.push({ stance: "against", text: "NEAR moves {{metric:near_beta_90d}} times as much as BTC (beta), so a BTC breakdown would hit it harder." });
+  }
+  const tripwire = a.labels.btc_tripwire?.value;
+  if (tripwire && tripwire !== "intact" && tripwire !== "no data") {
+    items.push({ stance: "against", text: "The BTC weekly-average tripwire is {{label:btc_tripwire}}: {{metric:btc_weeks_below_wma}} weekly closes below the average (the regain window is {{param:tripwire_regain_weeks}} weeks)." });
+  }
+  if (v(a, "desk_whale_pnl_oct_usd") !== null) {
+    items.push({ stance: "for", text: "Desk claim: one large wallet holds a leveraged NEAR long with more than {{metric:desk_whale_pnl_oct_usd}} in profit. It is positioning by one actor, not usage." });
+  }
+  if (v(a, "desk_omni_exploit_usd") !== null) {
+    items.push({ stance: "against", text: "Security: a desk reports an Omni bridge exploit of about {{metric:desk_omni_exploit_usd}} on NEAR Intents. The same desk says the chain and token were unaffected, but Intents is the pillar this thesis leans on." });
+  }
+  if (v(a, "desk_alt_beta_ratio") !== null) {
+    items.push({ stance: "against", text: "On the October selloff day NEAR fell {{metric:desk_near_move_oct25_pct}} against {{metric:desk_btc_move_oct25_pct}} for BTC, about {{metric:desk_alt_beta_ratio}} times as hard (desk figures)." });
+  }
+
   const conc = v(a, "top10_share_median_30d");
   if (conc !== null && conc >= PARAMS.spike_concentration_pct) {
     items.push({ stance: "against", text: "Activity is concentrated: the ten most active signers generate {{metric:top10_share_median_30d}} of transactions (thirty-day median)." });
@@ -79,10 +111,34 @@ export function buildContext(a: Analysis): RenderContext {
     return `- {{label:spike_${i}_date}}: {{label:spike_${i}_class}}; the ten most active signers produced {{metric:spike_${i}_top10}} of transactions.`;
   });
 
+  const confRows = a.confluence.map((c, i) => {
+    labels[`conf_${i}_met`] = { value: c.met === null ? "no data" : c.met ? "yes" : "no" };
+    return `| ${c.text} | {{label:conf_${i}_met}} |`;
+  });
+  const confTable = ["| Check | Met |", "| --- | --- |", ...confRows].join("\n");
+
+  const deskRows = a.desk_observations.map((o, i) => {
+    labels[`obs_${i}_date`] = { value: o.date ?? "undated" };
+    labels[`obs_${i}_desk`] = { value: o.desk };
+    labels[`obs_${i}_topic`] = { value: o.topic };
+    return `| {{label:obs_${i}_date}} | {{label:obs_${i}_desk}} | {{label:obs_${i}_topic}} | ${o.claim} |`;
+  });
+  const deskTable = deskRows.length
+    ? ["| Date | Desk | Topic | Claim (paraphrased) |", "| --- | --- | --- | --- |", ...deskRows].join("\n")
+    : "No desk observations are available in this build.";
+
+  const themeRows = a.notion_themes.map((t, i) => {
+    labels[`theme_${i}_title`] = { value: t.title };
+    return `- {{label:theme_${i}_title}} (matching rows: {{metric:notion_theme_${t.id}}})`;
+  });
+
   return {
     metrics,
     labels,
     blocks: {
+      confluence: confTable,
+      desk_observations: deskTable,
+      notion_themes: themeRows.join("\n") || "- No Notion themes in this build.",
       evidence_for: bullets("for"),
       evidence_against: bullets("against"),
       divergences: divTable,

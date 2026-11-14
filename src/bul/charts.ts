@@ -1,3 +1,4 @@
+import { PARAMS } from "./params";
 import { movingAverage } from "./stats";
 import type { Inputs } from "./load";
 import type { Analysis } from "./types";
@@ -94,6 +95,60 @@ export function buildCharts(inputs: Inputs, a: Analysis): ChartDef[] {
       spec: { ...base,
         data: { values: a.divergences.map((d) => ({ week: d.week, sentiment: d.sentiment_index, kind: d.reconstructed ? "reconstructed" : "live" })) },
         mark: { type: "bar" }, encoding: { x: { field: "week", type: "ordinal", title: null }, y: { field: "sentiment", type: "quantitative", title: "Index", scale: { domain: [-1, 1] } }, color: { field: "kind", type: "nominal", title: null } } },
+    },
+    ...priceCharts(inputs, a),
+  ];
+}
+
+const PRICE_ENDPOINT = "data/raw/price/near.json and data/raw/price/btc.json (daily candles; the price source is configured outside this repo)";
+
+/** Technical charts exist only when price candles are present; otherwise the thesis says the metrics are not available. */
+function priceCharts(inputs: Inputs, a: Analysis): ChartDef[] {
+  if (!inputs.price) return [];
+  const near = inputs.price.near.bars;
+  const closes = near.map((b) => b.close);
+  const fast = movingAverage(closes, PARAMS.sma_fast_days);
+  const slow = movingAverage(closes, PARAMS.sma_slow_days);
+  const shown = 260;
+  const from = Math.max(0, near.length - shown);
+  const m = (id: string) => a.metrics[id]?.value ?? null;
+  const rules = [
+    { level: m("range_high"), kind: "range high" },
+    { level: m("range_median"), kind: "range median" },
+    { level: m("range_low"), kind: "range low" },
+    ...a.npocs.map((n) => ({ level: n.level, kind: `open nPOC (${n.side})` })),
+  ].filter((r) => r.level !== null);
+  const btc = inputs.price.btc.bars;
+  const span = 120;
+  const nearTail = near.slice(-span);
+  const btcTail = btc.slice(-span);
+  const index = (bars: typeof near) => bars.map((b) => ({ date: b.date, value: (b.close / (bars[0]?.close ?? b.close)) * 100 }));
+  return [
+    {
+      id: "price_technical", title: "NEAR price with averages, range and open nPOC levels", agent: "bison", query_file: null, endpoint: PRICE_ENDPOINT,
+      sentence: "NEAR closes {{metric:near_vs_sma_slow_pct}} from its slow average, sits {{metric:range_position_pct}} of the way up its range and has {{metric:npoc_open_total}} open nPOC levels.",
+      spec: {
+        ...base,
+        height: 280,
+        layer: [
+          { data: { values: near.slice(from).map((b, i) => ({ date: b.date, close: b.close, fast: fast[from + i], slow: slow[from + i] })) },
+            transform: [{ fold: ["close", "fast", "slow"], as: ["series", "price"] }],
+            mark: { type: "line", strokeWidth: 1.6 },
+            encoding: { x: { field: "date", type: "temporal", title: null }, y: { field: "price", type: "quantitative", title: "USD", scale: { zero: false } }, color: { field: "series", type: "nominal", title: null } } },
+          { data: { values: rules }, mark: { type: "rule", strokeDash: [4, 4], opacity: 0.7 },
+            encoding: { y: { field: "level", type: "quantitative" }, color: { field: "kind", type: "nominal", title: null } } },
+        ],
+      },
+    },
+    {
+      id: "near_vs_btc", title: "NEAR against BTC, indexed to the start of the window", agent: "bul", query_file: null, endpoint: PRICE_ENDPOINT,
+      sentence: "Over {{param:rs_lookback_days}} days NEAR returned {{metric:near_return_30d_pct}} and BTC {{metric:btc_return_30d_pct}}; the beta of NEAR to BTC is {{metric:near_beta_90d}}.",
+      spec: {
+        ...base,
+        data: { values: [...index(nearTail).map((d) => ({ ...d, series: "NEAR" })), ...index(btcTail).map((d) => ({ ...d, series: "BTC" }))] },
+        mark: "line",
+        encoding: { x: { field: "date", type: "temporal", title: null }, y: { field: "value", type: "quantitative", title: "Index", scale: { zero: false } }, color: { field: "series", type: "nominal", title: null } },
+      },
     },
   ];
 }

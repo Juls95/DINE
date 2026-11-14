@@ -16,7 +16,7 @@ export type Violation = { check: string; detail: string };
 
 export function modeBanner(mode: "mock" | "live"): string {
   return mode === "mock"
-    ? "> **SIMULATED DATA.** This document was generated from the mock scenario: no figure describes NEAR. It only exercises the format and the logic of the pipeline."
+    ? "> **SAMPLE THESIS · SIMULATED DATA.** On-chain, price and sentiment figures come from a seeded simulation and do not describe NEAR; they exercise the format and the logic of the pipeline. Desk notes are real but paraphrased, and external references are cited and unverified: each figure carries its own provenance label."
     : "> Real data. Reproducible with `pnpm bul:build` from the files in `data/`.";
 }
 

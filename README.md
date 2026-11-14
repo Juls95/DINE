@@ -16,7 +16,7 @@ Requirements: Node 22 and pnpm 10 (`corepack enable`). pnpm downloads Node 22.21
 
 | Do this | You will see this |
 | --- | --- |
-| `pnpm install && pnpm demo` | Simulated data in `data/mock/`, `examples/THESIS.mock.md` and the site in `dist/`, with no credentials. |
+| `pnpm install && pnpm demo` | Simulated data in `data/mock/`, the sample thesis in [`docs/SAMPLE_THESIS.md`](docs/SAMPLE_THESIS.md) and the site in `dist/`, with no credentials. |
 | `pnpm preview` and open `http://localhost:4173` | The site with a red "SIMULATED DATA" strip. |
 | Go to **Agora** | Beary, Bison and Bul evaluated separately, each with its validations, and the weekly table of sentiment against activity. |
 | Open an agent, for example **Bison** | What it does, inputs, outputs, runs and validations (byte cap, `block_date` filter, data freshness). |
@@ -42,7 +42,7 @@ The browser never calls Notion: the CSP is `connect-src 'self'`. The token only 
 | --- | --- | --- |
 | **Beary** (psychological read) | Notion (`TickersInfo`, `X Creative Output`, `X Account Analyses`) with `NOTION_TOKEN` + xAI Responses API with `x_search`, limited to `config/beary.handles.yaml` and one day per query | A NEAR dossier in `data/beary/notion/near.json` (it filters out the English words *near*/*nearly*), posts verified against xAI's citations, a credibility score computed in code and a weekly sentiment index. It stores paraphrases and URLs, never the full text of a post. The token never reaches the bundle or git. |
 | **Bison** (technical read) | BigQuery `crypto_near_mainnet_us` (`blocks`, `transactions`, `receipt_actions`) and the Intents Explorer `GET /api/v0/transactions` | Active accounts, transactions, new accounts, contract usage, concentration, meta-transactions and 1Click Swap volume. Every query goes through a dry run with the `BQ_MAX_BYTES` cap. |
-| **Bul** (synthesis) | Files from Beary and Bison | Adoption regime, spikes versus structural changes, lagged correlation, confirmations and mirages, `THESIS.md`, the dashboard and `bundle.json`. |
+| **Bul** (synthesis) | Files from Beary and Bison, plus optional daily candles and the curated desk file | Adoption regime, spikes versus structural changes, lagged correlation, confirmations and mirages, the technical layer (below), `THESIS.md`, the dashboard and `bundle.json`. |
 
 Rules the code enforces:
 
@@ -50,6 +50,18 @@ Rules the code enforces:
 - **What cannot be measured is said.** The thesis section "Metrics that cannot be computed" lists price, TVL, USD fees, total Intents volume and unique humans.
 - **Simulated and real data are never mixed.** `DATA_MODE=mock` writes to git-ignored folders and the build fails if it finds artifacts from another mode.
 - **The language model is swappable.** `LLM_PROVIDER=gemini|xai` and `LLM_MODEL` choose the structuring model without code changes.
+
+### Technical and macro layer
+
+The thesis ends with a stance that combines three independent reads, never one: on-chain adoption (Bison), technical structure and the Bitcoin regime.
+
+- **Structure.** Naked points of control (a fast candle leaves an unfilled print at the middle of its body; a level only closes when a candle *closes* through it, a wick does not count), a range framework (high, low, median, premium and discount) with Fibonacci levels, an eight-item confluence checklist with pre-registered thresholds, and a risk template (stop beyond the level, position size from account and risk percent, breakeven at half way to the first target). Prints are approximated on daily candles; intraday prints are listed as not computable.
+- **Bitcoin regime.** Beta and correlation of NEAR to BTC, and a weekly-average tripwire with a regain window.
+- **Reference lenses.** An engagement-to-monetization thesis (DUOL) and a Bitcoin regime alert are used as frameworks only. Their figures are labelled `cited`, unverified, and never enter the NEAR evidence. The Bitcoin alert is paraphrased, not copied, because its legal notice forbids redistribution.
+- **Desk notes.** `data/beary/desk/near.json` holds paraphrased claims from public desks in Notion. Claims quote figures only through placeholders, so the verifier covers them too.
+- **Price source.** No approved price source is configured: put daily candles in `data/raw/price/near.json` and `btc.json` (schema in `src/schemas/market.ts`). Without them every technical metric reads "not available" and the thesis says so.
+
+Every metric carries a provenance label: `computed`, `simulated`, `desk` or `cited`. In `DATA_MODE=mock` the on-chain, price and sentiment series are simulated and the banner says so.
 
 ## Commands
 

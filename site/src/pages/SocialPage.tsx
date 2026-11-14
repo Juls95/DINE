@@ -16,6 +16,7 @@ const SOURCE_LABEL: Record<string, string> = {
 
 export function SocialPage({ bundle }: { bundle: Bundle }) {
   const { weeks, latest_posts, discard_reasons, notion } = bundle.beary;
+  const { desk } = bundle;
   const latest = weeks.at(-1);
   return (
     <section className="page">
@@ -66,6 +67,25 @@ export function SocialPage({ bundle }: { bundle: Bundle }) {
       ) : (
         <p className="muted">Beary has no Notion dossier yet. Set NOTION_TOKEN (locally or as a Render secret) and run <code>pnpm beary:notion</code>.</p>
       )}
+
+      {desk ? (
+        <>
+          <h2>Desk observations</h2>
+          <p className="muted">
+            {desk.desks.length} public desks · paraphrased from Notion rows · claims by public accounts, not measurements. Bison has not verified them.
+          </p>
+          <div className="table-wrap">
+            <table>
+              <thead><tr><th>Date</th><th>Desk</th><th>Topic</th><th>Claim</th></tr></thead>
+              <tbody>
+                {desk.observations.map((o) => (
+                  <tr key={o.id}><td>{o.date ?? "—"}</td><td>{o.desk}</td><td>{o.topic}</td><td>{o.claim}</td></tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </>
+      ) : null}
 
       {latest ? (
         <>

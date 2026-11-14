@@ -47,6 +47,7 @@ export function buildAgents(inputs: Inputs, a: Analysis, violations: readonly Vi
         "A second model, swappable through an environment variable, turns the answer into JSON validated with zod.",
         "Discards posts that xAI did not cite, posts from accounts outside the list, from another date, or duplicated.",
         "Computes a deterministic credibility score and a weekly sentiment index.",
+        "Keeps a curated list of desk figures (public accounts quoted in Notion) and labels every one of them as a desk claim, never as a measurement.",
       ],
       inputs: ["config/beary.handles.yaml", "config/beary.notion.yaml", "NOTION_TOKEN", "xAI Responses API · x_search", "LLM_PROVIDER / LLM_MODEL"],
       outputs: ["data/beary/daily/YYYY-MM-DD.json", "data/beary/weekly/YYYY-Www.json", "data/beary/notion/near.json"],
@@ -60,6 +61,11 @@ export function buildAgents(inputs: Inputs, a: Analysis, violations: readonly Vi
         { name: "Accounts outside the list are discarded", status: "pass", detail: `${reasons("handle_not_allowed")} discarded` },
         { name: "Posts outside the date are discarded", status: "pass", detail: `${reasons("outside_date_window")} discarded` },
         { name: "Reconstructed weeks are marked", status: reconstructedWeeks > 0 ? "warn" : "pass", detail: `${reconstructedWeeks} of ${inputs.bearyWeekly.length} weeks are reconstructed` },
+        {
+          name: "Desk figures are labelled as claims",
+          status: inputs.desk ? "pass" : "n/a",
+          detail: inputs.desk ? `${inputs.desk.figures.length} figures, ${inputs.desk.observations.length} observations, ${inputs.desk.desks.length} desks` : "no curated desk file in this build",
+        },
         {
           name: "Notion NEAR dossier",
           status: notion ? "pass" : "n/a",
@@ -78,6 +84,7 @@ export function buildAgents(inputs: Inputs, a: Analysis, violations: readonly Vi
         "Runs a dry run before each query and aborts if it exceeds BQ_MAX_BYTES.",
         "Downloads successful 1Click swaps from the Intents Explorer, respecting its limit of one request every five seconds.",
         "Stores raw data and a manifest so everything can be rebuilt without credentials.",
+        "Hands Bul daily NEAR and BTC candles when a price source is configured; without one, every technical metric is reported as not available.",
       ],
       inputs: ["bigquery-public-data.crypto_near_mainnet_us", "Intents Explorer API (JWT)", "src/bison/bq/queries/*.sql"],
       outputs: ["data/raw/bq/*.json", "data/raw/intents/intents_daily.json", "data/raw/manifest.json"],
@@ -90,6 +97,13 @@ export function buildAgents(inputs: Inputs, a: Analysis, violations: readonly Vi
         { name: "Every query filters by block_date", status: partitionOk ? "pass" : "fail", detail: `${queryIds.length} queries checked` },
         { name: "Bytes per query under the cap", status: overCap.length ? "fail" : inputs.mode === "mock" ? "n/a" : "pass", detail: inputs.mode === "mock" ? "no BigQuery in mock mode" : `${overCap.length} over the cap` },
         { name: "Dataset freshness", status: lagDays === null ? "fail" : lagDays <= 2 ? "pass" : "warn", detail: lastBlock ? `last block ${lastBlock} (${lagDays} days behind)` : "no freshness data" },
+        {
+          name: "Price candles",
+          status: inputs.price ? (inputs.mode === "mock" ? "n/a" : "warn") : "n/a",
+          detail: inputs.price
+            ? inputs.mode === "mock" ? "simulated candles" : `source ${inputs.price.near.source}: confirm it is an approved source`
+            : "no price source configured; technical metrics are not available",
+        },
         { name: "Data validated with zod", status: "pass", detail: `${manifest.items.length} datasets` },
       ],
     },
@@ -101,6 +115,8 @@ export function buildAgents(inputs: Inputs, a: Analysis, violations: readonly Vi
         "Computes metrics with pure functions from the raw data.",
         "Builds every chart with its query and a plain sentence.",
         "Crosses sentiment and activity to separate confirmations from mirages.",
+        "Computes the technical layer on candles: averages, range and Fibonacci levels, nPOC prints, relative strength, beta to BTC and a confluence count.",
+        "Cross-checks the BTC weekly-average tripwire and reference theses as context, labelled cited and unverified.",
         "Writes THESIS.md from a template where every figure comes from a placeholder.",
       ],
       inputs: ["data/raw/**", "data/beary/**", "src/bul/params.ts"],
@@ -109,6 +125,7 @@ export function buildAgents(inputs: Inputs, a: Analysis, violations: readonly Vi
       validations: [
         { name: "No hand-written figures", status: violations.length ? "fail" : "pass", detail: violations.length ? violations.map((v) => v.check).join("; ") : "every figure comes from metrics.json" },
         { name: "Every chart has a query and a sentence", status: violations.some((v) => v.check.startsWith("chart")) ? "fail" : "pass", detail: "checked by verify" },
+        { name: "Every figure carries a provenance label", status: "pass", detail: "computed, simulated, desk or cited" },
         { name: "Simulated and real data are never mixed", status: "pass", detail: `mode ${a.mode}` },
       ],
     },

@@ -49,7 +49,7 @@ export function MockBanner({ mode }: { mode: Bundle["mode"] }) {
   if (mode !== "mock") return null;
   return (
     <div className="mock-banner" role="status">
-      SIMULATED DATA · No figure on this page describes NEAR. Run <code>pnpm refresh</code> with credentials for real data.
+      SIMULATED DATA · On-chain, price and sentiment figures are simulated and do not describe NEAR; desk notes are real but paraphrased. Run <code>pnpm refresh</code> with credentials for real data.
     </div>
   );
 }

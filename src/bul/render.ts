@@ -7,7 +7,7 @@ export type RenderContext = {
   blocks: Record<string, string>;
 };
 
-const PLACEHOLDER = /\{\{(metric|param|label|block):([a-zA-Z0-9_]+)\}\}/g;
+const PLACEHOLDER = /\{\{(metric|param|label|block|prov):([a-zA-Z0-9_]+)\}\}/g;
 export const SENTINEL = "§";
 
 const intFmt = new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 });
@@ -36,7 +36,7 @@ export function formatMetric(m: Metric): string {
 export class MissingPlaceholderError extends Error {}
 
 /**
- * Renders {{metric|param|label|block:id}}. In sentinel mode every value becomes "§",
+ * Renders {{metric|param|label|block|prov:id}} (prov = the provenance word of a metric). In sentinel mode every value becomes "§",
  * which lets `verify` prove that no digit in the output came from hand-written text.
  */
 export function render(template: string, ctx: RenderContext, sentinel = false): string {
@@ -50,6 +50,11 @@ export function render(template: string, ctx: RenderContext, sentinel = false): 
       const m = ctx.metrics[id];
       if (!m) throw new MissingPlaceholderError(`Unknown metric: ${id}`);
       return sentinel ? SENTINEL : formatMetric(m);
+    }
+    if (kind === "prov") {
+      const m = ctx.metrics[id];
+      if (!m) throw new MissingPlaceholderError(`Unknown metric for provenance: ${id}`);
+      return sentinel ? SENTINEL : (m.provenance ?? "computed");
     }
     if (kind === "param") {
       if (!(id in PARAMS)) throw new MissingPlaceholderError(`Unknown param: ${id}`);

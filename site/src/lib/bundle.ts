@@ -1,6 +1,7 @@
 import { z } from "zod";
 import type { AgentCard } from "../../../src/bul/agents";
 import type { Divergence, Metric, SpikeEvent } from "../../../src/bul/types";
+import type { DeskSnapshot } from "../../../src/schemas/market";
 import type { BearyNotionSnapshot, BearyWeekly, ScoredPost } from "../../../src/schemas/beary";
 
 export type ChartView = {
@@ -20,6 +21,9 @@ export type Bundle = {
   thesis_md: string;
   hypothesis_verdict: string | null;
   regime: string | null;
+  stance: string | null;
+  technical_bias: string | null;
+  desk: DeskSnapshot | null;
   metrics: Record<string, Metric>;
   charts: ChartView[];
   divergences: Divergence[];

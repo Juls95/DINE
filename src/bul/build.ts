@@ -30,7 +30,7 @@ function main() {
   }
 
   const thesis = render(template, ctx);
-  writeText(mode === "mock" ? "examples/THESIS.mock.md" : "THESIS.md", thesis);
+  writeText(mode === "mock" ? "docs/SAMPLE_THESIS.md" : "THESIS.md", thesis);
   writeJson(`${dataRoot(mode)}/derived/metrics.json`, { mode, generated_at: generatedAt, metrics: analysis.metrics, labels: analysis.labels });
 
   const latest = inputs.bearyWeekly.at(-1);
@@ -46,12 +46,15 @@ function main() {
     thesis_md: thesis,
     hypothesis_verdict: analysis.labels.hypothesis_verdict?.value ?? null,
     regime: analysis.labels.regime?.value ?? null,
+    stance: analysis.labels.stance?.value ?? null,
+    technical_bias: analysis.labels.technical_bias?.value ?? null,
     metrics: analysis.metrics,
     charts: charts.map((c) => ({
       id: c.id, title: c.title, agent: c.agent, query_file: c.query_file, endpoint: c.endpoint,
       query_sql: c.query_file ? readFileSync(c.query_file, "utf8") : null,
       sentence: render(c.sentence, ctx), spec: c.spec,
     })),
+    desk: inputs.desk ? { ...inputs.desk, observations: inputs.desk.observations.map((o) => ({ ...o, claim: render(o.claim, ctx) })) } : null,
     divergences: analysis.divergences,
     spikes: analysis.spikes,
     beary: { weeks: inputs.bearyWeekly, latest_posts: latestPosts, discard_reasons: discardReasons, notion: inputs.bearyNotion },
