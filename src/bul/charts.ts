@@ -126,7 +126,7 @@ function priceCharts(inputs: Inputs, a: Analysis): ChartDef[] {
   return [
     {
       id: "price_technical", title: "NEAR price with averages, range and open nPOC levels", agent: "bison", query_file: null, endpoint: PRICE_ENDPOINT,
-      sentence: "NEAR closes {{metric:near_vs_sma_slow_pct}} from its slow average, sits {{metric:range_position_pct}} of the way up its range and has {{metric:npoc_open_total}} open nPOC levels.",
+      sentence: "NEAR closes {{metric:near_vs_sma_slow_pct}} from its slow average, sits {{metric:range_position_pct}} of the way up its range, and the number of open nPOC levels is {{metric:npoc_open_total}}.",
       spec: {
         ...base,
         height: 280,

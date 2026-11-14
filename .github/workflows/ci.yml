@@ -15,6 +15,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          persist-credentials: false
       - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
@@ -24,7 +25,9 @@ jobs:
       - run: pnpm lint
       - run: pnpm typecheck
       - run: pnpm test
+      # Production dependencies must be clean; dev dependencies may only carry the documented exceptions in pnpm-workspace.yaml.
       - run: pnpm audit --prod
+      - run: pnpm audit
       - name: Mock pipeline end to end
         run: pnpm demo && DATA_MODE=mock pnpm verify
       - name: Live artifacts pass the "never invent numbers" gate

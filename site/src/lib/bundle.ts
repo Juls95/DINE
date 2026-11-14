@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { HttpsUrl } from "../../../src/schemas/common";
 import type { AgentCard } from "../../../src/bul/agents";
 import type { Divergence, Metric, SpikeEvent } from "../../../src/bul/types";
 import type { DeskSnapshot } from "../../../src/schemas/market";
@@ -44,6 +45,11 @@ const BundleShape = z.looseObject({
   thesis_md: z.string(),
   charts: z.array(z.looseObject({ id: z.string(), spec: z.record(z.string(), z.unknown()) })),
   agents: z.array(z.looseObject({ id: z.enum(["beary", "bison", "bul"]) })).length(3),
+  // The build already enforces https; re-check here so a tampered static artifact cannot smuggle another scheme into a link.
+  beary: z.looseObject({
+    weeks: z.array(z.looseObject({ claims_to_verify: z.array(z.looseObject({ url: HttpsUrl })) })),
+    latest_posts: z.array(z.looseObject({ url: HttpsUrl })),
+  }),
 });
 
 export function parseBundle(json: unknown): Bundle {

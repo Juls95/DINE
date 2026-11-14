@@ -1,4 +1,4 @@
-import { REDACTED, redactDeep, redactHeaders, redactString } from "./redact";
+import { REDACTED, redactDeep, redactHeaders, redactString, scrubPii } from "./redact";
 
 describe("redact", () => {
   const jwt = "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ4In0.c2lnbmF0dXJl";
@@ -7,6 +7,12 @@ describe("redact", () => {
     const out = redactString(`Bearer abc123 ${jwt} https://x.test/?key=secret&other=1`);
     expect(out).not.toMatch(/abc123|secret|eyJ/);
     expect(out).toContain("other=1");
+  });
+
+  it("scrubs e-mail addresses from published text and from logs", () => {
+    expect(scrubPii("Write to a.b+c@sub.example.org today")).toBe("Write to [email] today");
+    expect(redactString("user jane@example.org failed")).toBe("user [email] failed");
+    expect(scrubPii("no address here, @handle is fine")).toBe("no address here, @handle is fine");
   });
 
   it("redacts secret headers by name", () => {

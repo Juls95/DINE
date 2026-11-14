@@ -1,10 +1,12 @@
 import { useState, type FormEvent } from "react";
+import { z } from "zod";
 
 const VOTE_KEY = "rdc.agora.up";
 const COMMENTS_KEY = "rdc.agora.comments";
 const MAX = 280;
 
-export type LocalComment = { id: string; text: string; at: string };
+const LocalCommentSchema = z.object({ id: z.string().max(40), text: z.string().min(1).max(MAX), at: z.string().max(40) });
+export type LocalComment = z.infer<typeof LocalCommentSchema>;
 
 function readVote(): boolean {
   try {
@@ -20,7 +22,11 @@ function readComments(): LocalComment[] {
     if (!raw) return [];
     const parsed: unknown = JSON.parse(raw);
     if (!Array.isArray(parsed)) return [];
-    return parsed.filter((c): c is LocalComment => typeof c === "object" && c !== null && typeof (c as LocalComment).text === "string");
+    // localStorage can be edited by anyone with the device: keep only well-formed entries.
+    return parsed.flatMap((c) => {
+      const ok = LocalCommentSchema.safeParse(c);
+      return ok.success ? [ok.data] : [];
+    });
   } catch {
     return [];
   }

@@ -5,6 +5,7 @@ import { ErrorBoundary } from "./components/ErrorBoundary";
 import { Markdown } from "./lib/markdown";
 import { parseBundle, type Bundle } from "./lib/bundle";
 import { verdictCopy } from "./lib/verdict";
+import { safeHref } from "./lib/safe-url";
 
 jest.mock("vega-embed", () => ({ __esModule: true, default: jest.fn().mockResolvedValue({ finalize: jest.fn() }) }));
 
@@ -62,6 +63,18 @@ describe("site", () => {
     expect(screen.getByRole("heading", { name: /every verdict is public/i })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: /read the thesis/i })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: /audit a thinker/i })).toBeInTheDocument();
+  });
+
+  it("ignores tampered comments in localStorage instead of crashing", () => {
+    localStorage.setItem("rdc.agora.comments", JSON.stringify([{ id: "1", text: "ok", at: "2026-11-14" }, { id: 2, text: { x: 1 }, at: [] }, "junk", null]));
+    render(<Page route="/" bundle={bundle} />);
+    fireEvent.click(screen.getByRole("button", { name: /comment/i }));
+    expect(screen.getByText("ok")).toBeInTheDocument();
+  });
+
+  it("safeHref only lets https links through", () => {
+    expect(safeHref("https://x.com/near")).toBe("https://x.com/near");
+    for (const bad of ["javascript:alert(1)", "data:text/html,x", "http://x.com", "//x.com", "", null, undefined]) expect(safeHref(bad)).toBeUndefined();
   });
 
   it("verdictCopy never treats 'not supported' as a pass", () => {
@@ -151,6 +164,11 @@ describe("site", () => {
     jest.spyOn(console, "error").mockImplementation(() => undefined);
     render(<ErrorBoundary label="Chart"><Boom /></ErrorBoundary>);
     expect(screen.getByRole("alert")).toHaveTextContent("Chart: could not be displayed.");
+  });
+
+  it("parseBundle rejects a bundle whose links are not https", () => {
+    const tampered = { ...bundle, beary: { ...bundle.beary, latest_posts: [{ url: "javascript:alert(1)" }] } };
+    expect(() => parseBundle(tampered)).toThrow(/Invalid bundle.json/);
   });
 
   it("parseBundle fails fast on an incompatible bundle", () => {

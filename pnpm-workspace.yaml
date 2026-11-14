@@ -2,3 +2,13 @@
 minimumReleaseAge: 10080
 onlyBuiltDependencies:
   - esbuild
+
+# Dev-only advisories in the Jest toolchain (GHSA-3g3m-2fjr-6pw4, GHSA-g3hv-75wg-m249): pin the patched releases.
+overrides:
+  glob@>=9 <14.0.2: ">=14.0.2"
+  minimatch@>=7 <11.0.1: ">=11.0.1"
+
+# No patched release exists. Dev-only: deepmerge merges Jest's own local config, never untrusted input. Review when jest updates.
+auditConfig:
+  ignoreGhsas:
+    - GHSA-gcqx-w48m-w2h4

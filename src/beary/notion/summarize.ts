@@ -1,6 +1,7 @@
 import { BearyNotionHit, BearyNotionSnapshot, type NotionSentiment, type NotionSource } from "../../schemas/beary";
 import type { NotionPage } from "./client";
 import { propertyText, readProps } from "./client";
+import { scrubPii } from "../../lib/redact";
 import { isNearTicker, mentionsNearFields } from "./match";
 
 const EXCERPT = 800;
@@ -22,7 +23,7 @@ const THEMES: { id: string; title: string; test: (blob: string) => boolean }[] =
 ];
 
 function clip(text: string, max = EXCERPT): string {
-  const t = text.replace(/\s+/g, " ").trim();
+  const t = scrubPii(text).replace(/\s+/g, " ").trim();
   return t.length <= max ? t : `${t.slice(0, max - 1).trimEnd()}…`;
 }
 
@@ -83,13 +84,13 @@ export function hitFromTicker(page: NotionPage): BearyNotionHit | null {
   return BearyNotionHit.parse({
     source: "tickers_info",
     page_id: page.id,
-    title: title || "untitled ticker",
+    title: scrubPii(title) || "untitled ticker",
     date: newsDate,
     sentiment: null,
-    account: propertyText(p.Username) || null,
-    topic: sector || null,
+    account: scrubPii(propertyText(p.Username)) || null,
+    topic: scrubPii(sector) || null,
     excerpt: clip(bits.join(" — ")),
-    url: page.url ?? null,
+    url: null,
   });
 }
 
@@ -107,13 +108,13 @@ export function hitFromDesk(page: NotionPage, source: Exclude<NotionSource, "tic
   return BearyNotionHit.parse({
     source,
     page_id: page.id,
-    title: title || "untitled",
+    title: scrubPii(title) || "untitled",
     date,
     sentiment,
-    account: account || null,
-    topic: topic || null,
+    account: scrubPii(account) || null,
+    topic: scrubPii(topic) || null,
     excerpt: clip(exec || insights || topic),
-    url: page.url ?? null,
+    url: null,
   });
 }
 

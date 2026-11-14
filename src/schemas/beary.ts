@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { DataMode, IsoDate, IsoWeek } from "./common";
+import { DataMode, HttpsUrl, IsoDate, IsoWeek } from "./common";
 
 export const HandleTier = z.enum(["official", "core", "ecosystem", "analyst"]);
 export type HandleTier = z.infer<typeof HandleTier>;
@@ -16,12 +16,12 @@ export const ClaimType = z.enum(["announcement", "metric", "opinion", "promo", "
 /** What the structuring LLM must return per post. Only a short paraphrase is kept, never the full post text. */
 export const ExtractedPost = z.object({
   post_id: z.string().min(1),
-  url: z.string().url(),
+  url: HttpsUrl,
   handle: z.string(),
   date: IsoDate,
   claim_type: ClaimType,
   paraphrase: z.string().max(240),
-  primary_source_url: z.string().url().nullable(),
+  primary_source_url: HttpsUrl.nullable(),
   contains_numeric_claim: z.boolean(),
   sentiment: z.number().min(-1).max(1),
   topics: z.array(z.string()).max(5),
@@ -69,7 +69,7 @@ export const BearyWeekly = z.object({
   discarded_count: z.number().int().nonnegative(),
   sentiment_index: z.number().min(-1).max(1).nullable(),
   narratives: z.array(z.object({ topic: z.string(), posts: z.number().int(), avg_sentiment: z.number(), weight: z.number() })),
-  claims_to_verify: z.array(z.object({ post_id: z.string(), url: z.string(), paraphrase: z.string(), topic: z.string() })),
+  claims_to_verify: z.array(z.object({ post_id: z.string(), url: HttpsUrl, paraphrase: z.string(), topic: z.string() })),
 });
 export type BearyWeekly = z.infer<typeof BearyWeekly>;
 
@@ -88,7 +88,8 @@ export const BearyNotionHit = z.object({
   account: z.string().nullable(),
   topic: z.string().nullable(),
   excerpt: z.string().max(800),
-  url: z.string().nullable(),
+  /** Always null in exports: Notion page URLs belong to a private workspace and must not be published. */
+  url: HttpsUrl.nullable(),
 });
 export type BearyNotionHit = z.infer<typeof BearyNotionHit>;
 

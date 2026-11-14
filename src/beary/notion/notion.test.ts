@@ -116,6 +116,25 @@ describe("hit mapping", () => {
     expect(falsePositive).toBeNull();
   });
 
+  it("never publishes a Notion page URL or an e-mail address found in a private note", () => {
+    const hit = hitFromDesk(
+      {
+        id: "p1",
+        url: "https://www.notion.so/workspace/Private-page-0123456789abcdef",
+        properties: {
+          Título: title("@desk - NEAR note"),
+          "Cuenta analizada": rich("@desk"),
+          "Topic / Tema principal": rich("NEAR contact: analyst@example.org"),
+          "Resumen ejecutivo": rich("NEAR setup. Write to analyst@example.org for the chart."),
+        },
+      },
+      "x_account_analyses",
+    );
+    expect(hit?.url).toBeNull();
+    expect(JSON.stringify(hit)).not.toMatch(/@example\.org|notion\.so/);
+    expect(hit?.excerpt).toContain("[email]");
+  });
+
   it("maps desk rows and ignores nearly-only copy", () => {
     const hit = hitFromDesk(
       {

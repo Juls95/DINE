@@ -1,4 +1,6 @@
+import type { ReactNode } from "react";
 import type { Bundle } from "../lib/bundle";
+import { safeHref } from "../lib/safe-url";
 
 const REASON: Record<string, string> = {
   not_in_citations: "Not cited by xAI (possible hallucination)",
@@ -13,6 +15,12 @@ const SOURCE_LABEL: Record<string, string> = {
   x_creative_output: "X Creative Output",
   x_account_analyses: "X Account Analyses",
 };
+
+/** An external link only when the URL is https; otherwise plain text, never an empty anchor. */
+function ExtLink({ url, children }: { url: string | null | undefined; children: ReactNode }) {
+  const href = safeHref(url);
+  return href ? <a href={href} rel="noreferrer noopener" target="_blank">{children}</a> : <>{children}</>;
+}
 
 export function SocialPage({ bundle }: { bundle: Bundle }) {
   const { weeks, latest_posts, discard_reasons, notion } = bundle.beary;
@@ -54,7 +62,7 @@ export function SocialPage({ bundle }: { bundle: Bundle }) {
                 {notion.hits.map((h) => (
                   <tr key={h.page_id}>
                     <td>{SOURCE_LABEL[h.source] ?? h.source}</td>
-                    <td>{h.url ? <a href={h.url} rel="noreferrer noopener" target="_blank">{h.title}</a> : h.title}</td>
+                    <td><ExtLink url={h.url}>{h.title}</ExtLink></td>
                     <td>{h.date ?? "—"}</td>
                     <td>{h.sentiment ?? "—"}</td>
                     <td>{h.excerpt}</td>
@@ -105,7 +113,7 @@ export function SocialPage({ bundle }: { bundle: Bundle }) {
           </div>
 
           <h2>Claims for Bison to verify</h2>
-          <ul>{latest.claims_to_verify.map((c) => <li key={c.post_id}><a href={c.url} rel="noreferrer noopener" target="_blank">{c.paraphrase}</a> <span className="muted">· {c.topic}</span></li>)}</ul>
+          <ul>{latest.claims_to_verify.map((c) => <li key={c.post_id}><ExtLink url={c.url}>{c.paraphrase}</ExtLink> <span className="muted">· {c.topic}</span></li>)}</ul>
         </>
       ) : (
         <p>Beary has no analyzed weeks yet.</p>
@@ -118,7 +126,7 @@ export function SocialPage({ bundle }: { bundle: Bundle }) {
           <tbody>
             {latest_posts.map((p) => (
               <tr key={p.post_id}>
-                <td><a href={p.url} rel="noreferrer noopener" target="_blank">@{p.handle}</a></td>
+                <td><ExtLink url={p.url}>@{p.handle}</ExtLink></td>
                 <td>{p.tier}</td>
                 <td>{p.paraphrase}</td>
                 <td>{p.credibility.toFixed(2)}</td>

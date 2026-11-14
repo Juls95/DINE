@@ -1,11 +1,11 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 
-/** Keep in sync with render.yaml so `pnpm preview` reproduces production. */
-const CSP = "default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self'; connect-src 'self'";
+import { SECURITY_HEADERS } from "./src/config/security-headers";
 
 export default defineConfig({
-  preview: { headers: { "Content-Security-Policy": CSP } },
+  // render.yaml carries the same headers; a test keeps both in sync so `pnpm preview` reproduces production.
+  preview: { headers: SECURITY_HEADERS },
   root: "site",
   base: "./",
   plugins: [react()],
