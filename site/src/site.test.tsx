@@ -1,6 +1,7 @@
 /** @jest-environment jsdom */
 import { fireEvent, render, screen } from "@testing-library/react";
 import { App, MockBanner, Page } from "./App";
+import { SignupForm } from "./components/SignupForm";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { Markdown } from "./lib/markdown";
 import { parseBundle, type Bundle } from "./lib/bundle";
@@ -8,6 +9,9 @@ import { verdictCopy } from "./lib/verdict";
 import { safeHref } from "./lib/safe-url";
 
 jest.mock("vega-embed", () => ({ __esModule: true, default: jest.fn().mockResolvedValue({ finalize: jest.fn() }) }));
+
+/** jsdom has no Response; the form only reads `ok` and `status`. */
+const fakeResponse = (status: number) => ({ ok: status >= 200 && status < 300, status }) as Response;
 
 const agent = (id: "beary" | "bison" | "bul", status: "pass" | "warn" | "fail" = "pass") => ({
   id, name: id[0]?.toUpperCase() + id.slice(1), role: `role of ${id}`, does: ["does something"], inputs: ["input"], outputs: ["output"],
@@ -51,7 +55,7 @@ describe("site", () => {
     expect(screen.getByRole("button", { name: /back/i })).toHaveAttribute("aria-pressed", "true");
     fireEvent.click(screen.getByRole("button", { name: /comment/i }));
     fireEvent.change(screen.getByLabelText(/comment/i), { target: { value: "what about the validations?" } });
-    fireEvent.click(screen.getByRole("button", { name: /post/i }));
+    fireEvent.click(screen.getByRole("button", { name: /^post$/i }));
     expect(screen.getByText("what about the validations?")).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Beary" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Bison" })).toBeInTheDocument();
@@ -70,6 +74,81 @@ describe("site", () => {
     render(<Page route="/" bundle={bundle} />);
     fireEvent.click(screen.getByRole("button", { name: /comment/i }));
     expect(screen.getByText("ok")).toBeInTheDocument();
+  });
+
+  describe("sign-up form", () => {
+    const ENDPOINT = "https://formspree.io/f/abcdwxyz";
+    const okFetch = () => jest.fn().mockResolvedValue(fakeResponse(200)) as unknown as typeof fetch;
+    const fill = (contact: string, consent = true) => {
+      fireEvent.change(screen.getByLabelText(/e-mail or x username/i), { target: { value: contact } });
+      if (consent) fireEvent.click(screen.getByRole("checkbox"));
+    };
+
+    it("is disabled and says so when no endpoint is configured", () => {
+      render(<SignupForm endpoint="" />);
+      expect(screen.getByRole("button", { name: /keep me posted/i })).toBeDisabled();
+      expect(screen.getByText(/sign-ups are not open yet/i)).toBeInTheDocument();
+    });
+
+    it("rejects a bad contact and a missing consent before any request", async () => {
+      const fetchImpl = okFetch();
+      render(<SignupForm endpoint={ENDPOINT} fetchImpl={fetchImpl} minFillMs={0} />);
+      fill("not valid", false);
+      fireEvent.click(screen.getByRole("button", { name: /keep me posted/i }));
+      expect(await screen.findByRole("alert")).toHaveTextContent(/valid e-mail address or an x username/i);
+      fill("@near", false);
+      fireEvent.click(screen.getByRole("button", { name: /keep me posted/i }));
+      expect(await screen.findByRole("alert")).toHaveTextContent(/tick the box/i);
+      expect(fetchImpl).not.toHaveBeenCalled();
+    });
+
+    it("refuses a too-fast submit (time trap)", async () => {
+      const fetchImpl = okFetch();
+      render(<SignupForm endpoint={ENDPOINT} fetchImpl={fetchImpl} minFillMs={60_000} />);
+      fill("@near");
+      fireEvent.click(screen.getByRole("button", { name: /keep me posted/i }));
+      expect(await screen.findByRole("alert")).toHaveTextContent(/that was quick/i);
+      expect(fetchImpl).not.toHaveBeenCalled();
+    });
+
+    it("sends once, confirms, and stores only a flag, never the address", async () => {
+      const fetchImpl = okFetch();
+      render(<SignupForm endpoint={ENDPOINT} fetchImpl={fetchImpl} minFillMs={0} />);
+      fill("Ana@Example.org");
+      fireEvent.click(screen.getByRole("button", { name: /keep me posted/i }));
+      expect(await screen.findByRole("status")).toHaveTextContent(/you are on the list/i);
+      expect(fetchImpl).toHaveBeenCalledTimes(1);
+      expect(JSON.stringify({ ...localStorage })).not.toMatch(/ana@example/i);
+    });
+
+    it("shows a friendly error when the service fails and lets the visitor retry", async () => {
+      const fetchImpl = jest.fn().mockResolvedValue(fakeResponse(500)) as unknown as typeof fetch;
+      render(<SignupForm endpoint={ENDPOINT} fetchImpl={fetchImpl} minFillMs={0} />);
+      fill("@near");
+      fireEvent.click(screen.getByRole("button", { name: /keep me posted/i }));
+      expect(await screen.findByRole("alert")).toHaveTextContent(/refused the request/i);
+      expect(screen.getByRole("button", { name: /keep me posted/i })).toBeEnabled();
+    });
+
+    it("keeps the honeypot out of the accessibility tree and sends nothing when it is filled", async () => {
+      const fetchImpl = okFetch();
+      const { container } = render(<SignupForm endpoint={ENDPOINT} fetchImpl={fetchImpl} minFillMs={0} />);
+      const trap = container.querySelector(".signup-trap");
+      expect(trap).toHaveAttribute("aria-hidden", "true");
+      fireEvent.change(trap?.querySelector("input") as HTMLInputElement, { target: { value: "http://spam" } });
+      fill("@near");
+      fireEvent.click(screen.getByRole("button", { name: /keep me posted/i }));
+      expect(await screen.findByRole("status")).toBeInTheDocument();
+      expect(fetchImpl).not.toHaveBeenCalled();
+    });
+
+    it("is reachable from the Updates page and from the landing", () => {
+      const updates = render(<Page route="/updates" bundle={bundle} />);
+      expect(screen.getByRole("heading", { name: /get updates/i, level: 1 })).toBeInTheDocument();
+      updates.unmount();
+      render(<Page route="/" bundle={bundle} />);
+      expect(screen.getByRole("heading", { name: /get updates/i })).toBeInTheDocument();
+    });
   });
 
   it("safeHref only lets https links through", () => {

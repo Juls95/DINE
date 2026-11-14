@@ -8,6 +8,7 @@ import { AgentPage } from "./pages/AgentPage";
 import { DashboardPage } from "./pages/DashboardPage";
 import { SocialPage } from "./pages/SocialPage";
 import { MethodologyPage } from "./pages/MethodologyPage";
+import { UpdatesPage } from "./pages/UpdatesPage";
 
 const NAV = [
   { href: "#/", label: "Agora" },
@@ -15,6 +16,7 @@ const NAV = [
   { href: "#/social", label: "Social" },
   { href: "#/thesis", label: "Thesis" },
   { href: "#/methodology", label: "Methodology" },
+  { href: "#/updates", label: "Updates" },
 ];
 
 export function useHashRoute(): string {
@@ -40,6 +42,7 @@ export function Page({ route, bundle }: { route: string; bundle: Bundle }): Reac
     case "/dashboard": return <DashboardPage bundle={bundle} />;
     case "/social": return <SocialPage bundle={bundle} />;
     case "/methodology": return <MethodologyPage />;
+    case "/updates": return <UpdatesPage />;
     case "/thesis": return <ThesisPage bundle={bundle} />;
     default: return <LandingPage bundle={bundle} />;
   }

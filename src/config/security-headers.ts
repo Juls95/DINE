@@ -1,3 +1,5 @@
+import { SIGNUP_ORIGIN } from "../schemas/signup";
+
 /**
  * Single source of truth for the response headers of the static site.
  * `vite preview` serves these; `render.yaml` must carry the same values (enforced by security-headers.test.ts).
@@ -7,7 +9,8 @@ export const CSP = [
   "img-src 'self' data:",
   "style-src 'self' 'unsafe-inline'",
   "script-src 'self'",
-  "connect-src 'self'",
+  // The sign-up form is the only thing the browser may post to besides this site.
+  `connect-src 'self' ${SIGNUP_ORIGIN}`,
   "object-src 'none'",
   "base-uri 'self'",
   "form-action 'self'",

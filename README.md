@@ -51,6 +51,15 @@ Rules the code enforces:
 - **Simulated and real data are never mixed.** `DATA_MODE=mock` writes to git-ignored folders and the build fails if it finds artifacts from another mode.
 - **The language model is swappable.** `LLM_PROVIDER=gemini|xai` and `LLM_MODEL` choose the structuring model without code changes.
 
+### Sign-ups for updates
+
+Visitors can leave an e-mail address or an X username on the landing page and on `#/updates`. The site is static, so the form posts to a hosted form service (Formspree) and nothing is stored by this repository.
+
+- **Setup (human):** create a Formspree form, then set `SIGNUP_ENDPOINT=https://formspree.io/f/<id>` in Render (or `.env` for a local build). The build fails if the value is not a Formspree form URL; empty keeps the form disabled with a "not open yet" message.
+- **Validation:** `src/schemas/signup.ts` (zod) accepts a valid e-mail or an X username and nothing else; explicit consent is required.
+- **Abuse resistance:** a hidden honeypot field (bots that fill it get a fake success and nothing is sent), a minimum fill time, one request at a time, and the CSP allows `connect-src` only to this site and `https://formspree.io`.
+- **Privacy:** the address is never logged, never written to `localStorage` (only a "done" flag) and never put in the repo. The page says what is collected and why.
+
 ### Technical and macro layer
 
 The thesis ends with a stance that combines three independent reads, never one: on-chain adoption (Bison), technical structure and the Bitcoin regime.

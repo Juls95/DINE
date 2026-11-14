@@ -13,6 +13,7 @@ Deadline: **2026-11-14T23:59:00Z** (17:59 local time, UTC-6). Every step marked 
 ## Demo
 
 - [ ] (human) Render: create the Static Site from `render.yaml`, branch `main`, deploy after CI passes. Paste `NOTION_TOKEN` as a secret of the service (not in git). Keep it online until 2026-11-25.
+- [ ] (human) Sign-ups: create a form at [formspree.io](https://formspree.io) (restrict it to your Render domain, turn on spam filtering), copy its endpoint (`https://formspree.io/f/<id>`) into the Render variable `SIGNUP_ENDPOINT` and redeploy. Submit a test with your own address and confirm it arrives. Until then the form shows "Sign-ups are not open yet".
 - [ ] (human) Record a short video: Agora, open Bison, open a dashboard query and show `pnpm verify` failing on a hand-written number.
 - [ ] (human) Publish the post on X with the video.
 

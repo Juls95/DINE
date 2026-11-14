@@ -14,6 +14,9 @@ services:
         value: 22.21.1
       - key: DATA_MODE
         value: live
+      # Hosted sign-up form, e.g. https://formspree.io/f/abcdwxyz. Public by design (it is shipped to the browser): not a secret.
+      - key: SIGNUP_ENDPOINT
+        sync: false
       - key: NOTION_TOKEN
         sync: false
       - key: NOTION_VERSION
@@ -27,7 +30,7 @@ services:
     headers:
       - path: /*
         name: Content-Security-Policy
-        value: "default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'"
+        value: "default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self'; connect-src 'self' https://formspree.io; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'"
       - path: /*
         name: Strict-Transport-Security
         value: "max-age=31536000; includeSubDomains"

@@ -6,6 +6,7 @@ import { Coliseum } from "../components/Coliseum";
 import { Countdown } from "../components/Countdown";
 import { ForumBar } from "../components/ForumBar";
 import { Overlay } from "../components/Overlay";
+import { SignupForm } from "../components/SignupForm";
 import { SpriteBeary, SpriteBison, SpriteBul, SpriteTablet } from "../components/PixelSprites";
 
 const MOTES = Array.from({ length: 26 }, (_, i) => ({
@@ -174,6 +175,12 @@ export function LandingPage({ bundle }: { bundle: Bundle }) {
 
       <section className="forum" id="reasoning">
         <AgoraFlow bundle={bundle} />
+      </section>
+
+      <section className="forum subscribe" id="updates">
+        <h2>Get updates</h2>
+        <p className="muted">Leave an e-mail address or your X username and we will tell you when the verdict, the regime or a tripwire changes.</p>
+        <SignupForm />
       </section>
 
       {faq && (
