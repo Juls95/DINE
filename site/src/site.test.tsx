@@ -24,7 +24,7 @@ const bundle: Bundle = {
   charts: [{ id: "daa", title: "Cuentas activas", agent: "bison", query_file: "q.sql", endpoint: null, query_sql: "SELECT 1", sentence: "Frase simple.", spec: {} }],
   divergences: [{ week: "2026-W44", from: "2026-10-26", reconstructed: true, sentiment_index: 0.7, sentiment_delta: 0.5, onchain_change_pct: -8, quadrant: "espejismo" }],
   spikes: [],
-  beary: { weeks: [], latest_posts: [], discard_reasons: { not_in_citations: 2 } },
+  beary: { weeks: [], latest_posts: [], discard_reasons: { not_in_citations: 2 }, notion: null },
   agents: [agent("beary", "warn"), agent("bison"), agent("bul")],
 };
 
@@ -79,6 +79,37 @@ describe("site", () => {
     expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent("Bison");
     expect(screen.getByText("entrada")).toBeInTheDocument();
     expect(screen.getByText("Query: q.sql")).toBeInTheDocument();
+  });
+
+  it("social page shows the Notion NEAR dossier when Beary has a snapshot", () => {
+    const withNotion: Bundle = {
+      ...bundle,
+      beary: {
+        ...bundle.beary,
+        notion: {
+          mode: "mock",
+          generated_at: "2026-11-14T13:00:00.000Z",
+          query: "NEAR",
+          databases: {
+            tickers_info: "99687de2-cbd0-4b2e-9e1c-0dd0a3211357",
+            x_creative_output: "460be6fc-c001-4330-9832-c55f647c5c23",
+            x_account_analyses: "bbaf87b8-dfa1-4cce-acb3-f4f69a0c383d",
+          },
+          counts: { tickers: 1, creative: 0, analyses: 0, scanned_pages: 3, discarded_false_positives: 1 },
+          sentiment_tally: { Positivo: 0, Neutral: 0, Negativo: 0, Mixto: 0 },
+          themes: [{ id: "intents_security", title: "NEAR Intents / Omni", evidence_count: 1, summary: "Omni exploit ~$3.8M" }],
+          paragraphs: ["Beary leyó TickersInfo buscando NEAR."],
+          hits: [{
+            source: "tickers_info", page_id: "1", title: "NEAR Intents", date: "2026-10-02",
+            sentiment: null, account: "Julian", topic: "crypto", excerpt: "Omni exploit ~$3.8M", url: null,
+          }],
+        },
+      },
+    };
+    render(<Page route="/social" bundle={withNotion} />);
+    expect(screen.getByRole("heading", { name: /expediente notion/i })).toBeInTheDocument();
+    expect(screen.getByRole("cell", { name: "NEAR Intents" })).toBeInTheDocument();
+    expect(screen.getAllByText(/Omni exploit/).length).toBeGreaterThan(0);
   });
 
   it("dashboard pairs every chart with its sentence and query", () => {

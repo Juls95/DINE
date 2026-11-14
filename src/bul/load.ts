@@ -2,7 +2,7 @@ import { existsSync, readdirSync } from "node:fs";
 import { z } from "zod";
 import { dataRoot, readJson } from "../lib/files";
 import { BISON_DATASETS, BisonManifest, DatasetFile, datasetFile, type BisonDatasetId } from "../schemas/bison";
-import { BearyDaily, BearyWeekly } from "../schemas/beary";
+import { BearyDaily, BearyNotionSnapshot, BearyWeekly } from "../schemas/beary";
 import type { DataMode } from "../schemas/common";
 
 type Rows<K extends BisonDatasetId> = z.infer<(typeof BISON_DATASETS)[K]>[];
@@ -14,6 +14,7 @@ export type Inputs = {
   bison: BisonData;
   bearyDaily: BearyDaily[];
   bearyWeekly: BearyWeekly[];
+  bearyNotion: BearyNotionSnapshot | null;
 };
 
 function readDir<T>(dir: string, schema: z.ZodType<T>): T[] {
@@ -36,7 +37,9 @@ export function loadInputs(mode: DataMode): Inputs {
   }
   const bearyDaily = readDir(`${root}/beary/daily`, BearyDaily);
   const bearyWeekly = readDir(`${root}/beary/weekly`, BearyWeekly);
-  const mixed = [manifest, ...bearyDaily, ...bearyWeekly].find((a) => a.mode !== mode);
+  const notionPath = `${root}/beary/notion/near.json`;
+  const bearyNotion = existsSync(notionPath) ? readJson(notionPath, BearyNotionSnapshot) : null;
+  const mixed = [manifest, ...bearyDaily, ...bearyWeekly, ...(bearyNotion ? [bearyNotion] : [])].find((a) => a.mode !== mode);
   if (mixed) throw new Error(`Found ${mixed.mode} artifact while building in ${mode} mode`);
-  return { mode, manifest, bison: bison as BisonData, bearyDaily, bearyWeekly };
+  return { mode, manifest, bison: bison as BisonData, bearyDaily, bearyWeekly, bearyNotion };
 }

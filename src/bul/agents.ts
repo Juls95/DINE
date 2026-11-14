@@ -34,20 +34,22 @@ export function buildAgents(inputs: Inputs, a: Analysis, violations: readonly Vi
   const overCap = manifest.items.filter((i) => i.bytes_processed !== null && i.bytes_processed > maxBytes);
   const reasons = (r: string) => bearyDaily.reduce((n, d) => n + d.discarded.filter((x) => x.reason === r).length, 0);
   const reconstructedWeeks = inputs.bearyWeekly.filter((w) => w.reconstructed).length;
+  const notion = inputs.bearyNotion;
 
   return [
     {
       id: "beary",
       name: "Beary",
-      role: "Lectura psicológica: qué dicen en X las cuentas confiables sobre NEAR.",
+      role: "Lectura psicológica: qué dicen en X y en Notion las cuentas confiables sobre NEAR.",
       does: [
+        "Lee TickersInfo, X Creative Output y X Account Analyses en Notion (token solo por env) y se queda con filas NEAR, no con el inglés near/nearly.",
         "Cada día consulta xAI (Grok) con la herramienta x_search, limitada a la lista de cuentas y a ese día.",
         "Un segundo modelo, intercambiable por variable de entorno, convierte la respuesta en JSON validado con zod.",
         "Descarta posts que xAI no citó, de cuentas fuera de la lista, de otra fecha o duplicados.",
         "Calcula un puntaje de credibilidad determinista y un índice semanal de sentimiento.",
       ],
-      inputs: ["config/beary.handles.yaml", "xAI Responses API · x_search", "LLM_PROVIDER / LLM_MODEL"],
-      outputs: ["data/beary/daily/AAAA-MM-DD.json", "data/beary/weekly/AAAA-Wss.json"],
+      inputs: ["config/beary.handles.yaml", "config/beary.notion.yaml", "NOTION_TOKEN", "xAI Responses API · x_search", "LLM_PROVIDER / LLM_MODEL"],
+      outputs: ["data/beary/daily/AAAA-MM-DD.json", "data/beary/weekly/AAAA-Wss.json", "data/beary/notion/near.json"],
       runs: bearyDaily.slice(-14).reverse().map((d) => ({
         at: d.date,
         summary: `${d.posts.length} posts verificados · ${d.discarded.length} descartados`,
@@ -58,6 +60,13 @@ export function buildAgents(inputs: Inputs, a: Analysis, violations: readonly Vi
         { name: "Cuentas fuera de la lista descartadas", status: "pass", detail: `${reasons("handle_not_allowed")} descartados` },
         { name: "Posts fuera de fecha descartados", status: "pass", detail: `${reasons("outside_date_window")} descartados` },
         { name: "Semanas reconstruidas marcadas", status: reconstructedWeeks > 0 ? "warn" : "pass", detail: `${reconstructedWeeks} de ${inputs.bearyWeekly.length} semanas son reconstruidas` },
+        {
+          name: "Expediente Notion NEAR",
+          status: notion ? "pass" : "n/a",
+          detail: notion
+            ? `${notion.hits.length} filas NEAR · ${notion.counts.discarded_false_positives} falsos positivos descartados`
+            : "sin corrida (falta NOTION_TOKEN o el artefacto)",
+        },
       ],
     },
     {

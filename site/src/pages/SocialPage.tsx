@@ -8,18 +8,64 @@ const REASON: Record<string, string> = {
   duplicate: "Duplicado",
 };
 
+const SOURCE_LABEL: Record<string, string> = {
+  tickers_info: "TickersInfo",
+  x_creative_output: "X Creative Output",
+  x_account_analyses: "X Account Analyses",
+};
+
 export function SocialPage({ bundle }: { bundle: Bundle }) {
-  const { weeks, latest_posts, discard_reasons } = bundle.beary;
+  const { weeks, latest_posts, discard_reasons, notion } = bundle.beary;
   const latest = weeks.at(-1);
   return (
     <section className="page">
       <header className="page-head">
         <h1>Resumen social</h1>
         <p>
-          Lo que Beary leyó en X sobre NEAR. Las cifras que aparecen en posts nunca se usan como datos: se marcan como afirmaciones que Bison debe
-          verificar.
+          Lo que Beary leyó en Notion y en X sobre NEAR. Las cifras que aparecen en posts o en las tablas nunca se usan como datos: se marcan como
+          afirmaciones que Bison debe verificar.
         </p>
       </header>
+
+      {notion ? (
+        <>
+          <h2>Expediente Notion · NEAR</h2>
+          <p className="muted">
+            {notion.generated_at.slice(0, 10)} · {notion.counts.tickers} TickersInfo · {notion.counts.creative} X Creative Output · {notion.counts.analyses} X Account Analyses · {notion.counts.discarded_false_positives} coincidencias falsas descartadas
+          </p>
+          <div className="stat-row">
+            <div className="stat"><span>Positivo</span><strong>{notion.sentiment_tally.Positivo}</strong></div>
+            <div className="stat"><span>Mixto</span><strong>{notion.sentiment_tally.Mixto}</strong></div>
+            <div className="stat"><span>Neutral</span><strong>{notion.sentiment_tally.Neutral}</strong></div>
+            <div className="stat"><span>Negativo</span><strong>{notion.sentiment_tally.Negativo}</strong></div>
+          </div>
+          {notion.paragraphs.map((p) => <p key={p.slice(0, 48)}>{p}</p>)}
+          {notion.themes.length > 0 ? (
+            <>
+              <h3>Temas</h3>
+              <ul>{notion.themes.map((t) => <li key={t.id}><strong>{t.title}</strong> ({t.evidence_count}): {t.summary}</li>)}</ul>
+            </>
+          ) : null}
+          <div className="table-wrap">
+            <table>
+              <thead><tr><th>Tabla</th><th>Título</th><th>Fecha</th><th>Sentimiento</th><th>Extracto</th></tr></thead>
+              <tbody>
+                {notion.hits.map((h) => (
+                  <tr key={h.page_id}>
+                    <td>{SOURCE_LABEL[h.source] ?? h.source}</td>
+                    <td>{h.url ? <a href={h.url} rel="noreferrer noopener" target="_blank">{h.title}</a> : h.title}</td>
+                    <td>{h.date ?? "—"}</td>
+                    <td>{h.sentiment ?? "—"}</td>
+                    <td>{h.excerpt}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </>
+      ) : (
+        <p className="muted">Beary todavía no tiene expediente Notion. Configura NOTION_TOKEN (local o secreto de Render) y corre <code>pnpm beary:notion</code>.</p>
+      )}
 
       {latest ? (
         <>

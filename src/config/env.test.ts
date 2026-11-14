@@ -6,6 +6,8 @@ describe("loadEnv", () => {
     expect(env.DATA_MODE).toBe("live");
     expect(env.LLM_PROVIDER).toBe("gemini");
     expect(env.BQ_MAX_BYTES).toBe(20_000_000_000);
+    expect(env.NOTION_VERSION).toBe("2022-06-28");
+    expect(env.NOTION_TOKEN).toBeUndefined();
   });
 
   it("switches the LLM provider with one env var", () => {

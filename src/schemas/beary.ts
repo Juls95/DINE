@@ -72,3 +72,54 @@ export const BearyWeekly = z.object({
   claims_to_verify: z.array(z.object({ post_id: z.string(), url: z.string(), paraphrase: z.string(), topic: z.string() })),
 });
 export type BearyWeekly = z.infer<typeof BearyWeekly>;
+
+export const NotionSource = z.enum(["tickers_info", "x_creative_output", "x_account_analyses"]);
+export type NotionSource = z.infer<typeof NotionSource>;
+
+export const BearyNotionHit = z.object({
+  source: NotionSource,
+  page_id: z.string().min(1),
+  title: z.string(),
+  date: IsoDate.nullable(),
+  sentiment: z.string().nullable(),
+  account: z.string().nullable(),
+  topic: z.string().nullable(),
+  excerpt: z.string().max(800),
+  url: z.string().nullable(),
+});
+export type BearyNotionHit = z.infer<typeof BearyNotionHit>;
+
+export const BearyNotionTheme = z.object({
+  id: z.string().min(1),
+  title: z.string().min(1),
+  evidence_count: z.number().int().nonnegative(),
+  summary: z.string(),
+});
+
+export const BearyNotionSnapshot = z.object({
+  mode: DataMode,
+  generated_at: z.string().min(1),
+  query: z.literal("NEAR"),
+  databases: z.object({
+    tickers_info: z.string().min(1),
+    x_creative_output: z.string().min(1),
+    x_account_analyses: z.string().min(1),
+  }),
+  counts: z.object({
+    tickers: z.number().int().nonnegative(),
+    creative: z.number().int().nonnegative(),
+    analyses: z.number().int().nonnegative(),
+    scanned_pages: z.number().int().nonnegative(),
+    discarded_false_positives: z.number().int().nonnegative(),
+  }),
+  sentiment_tally: z.object({
+    Positivo: z.number().int().nonnegative(),
+    Neutral: z.number().int().nonnegative(),
+    Negativo: z.number().int().nonnegative(),
+    Mixto: z.number().int().nonnegative(),
+  }),
+  themes: z.array(BearyNotionTheme),
+  paragraphs: z.array(z.string()),
+  hits: z.array(BearyNotionHit),
+});
+export type BearyNotionSnapshot = z.infer<typeof BearyNotionSnapshot>;

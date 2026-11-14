@@ -12,7 +12,7 @@ Fecha límite: **2026-11-14T23:59:00Z** (17:59 hora local, UTC-6). Cada paso mar
 
 ## Demo
 
-- [ ] (humano) Render: crear el Static Site desde `render.yaml`, rama `main`, deploy después de que pase CI. Mantenerlo en línea hasta 2026-11-25.
+- [ ] (humano) Render: crear el Static Site desde `render.yaml`, rama `main`, deploy después de que pase CI. Pegar `NOTION_TOKEN` como secret del servicio (no en git). Mantenerlo en línea hasta 2026-11-25.
 - [ ] (humano) Grabar un video corto: Ágora, abrir Bison, abrir una query del dashboard y mostrar `pnpm verify` fallando con un número escrito a mano.
 - [ ] (humano) Publicar el post en X con el video.
 

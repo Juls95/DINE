@@ -18,7 +18,7 @@ const MOTES = Array.from({ length: 26 }, (_, i) => ({
 const FAQS = [
   {
     q: "¿Qué es este ágora?",
-    a: "Un foro de tres pensadores. Beary lee cuentas fijas de X, Bison consulta BigQuery y 1Click Swap, Bul cruza ambas lecturas y escribe la tesis. Cada uno se evalúa por separado: entradas, salidas y validaciones.",
+    a: "Un foro de tres pensadores. Beary lee Notion (TickersInfo, X Creative Output, X Account Analyses) y cuentas fijas de X, Bison consulta BigQuery y 1Click Swap, Bul cruza ambas lecturas y escribe la tesis. Cada uno se evalúa por separado: entradas, salidas y validaciones.",
   },
   {
     q: "¿Por qué ninguna cifra está escrita a mano?",

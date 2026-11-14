@@ -54,7 +54,7 @@ function main() {
     })),
     divergences: analysis.divergences,
     spikes: analysis.spikes,
-    beary: { weeks: inputs.bearyWeekly, latest_posts: latestPosts, discard_reasons: discardReasons },
+    beary: { weeks: inputs.bearyWeekly, latest_posts: latestPosts, discard_reasons: discardReasons, notion: inputs.bearyNotion },
     agents: buildAgents(inputs, analysis, violations, env.BQ_MAX_BYTES),
   });
   log.info("build done", { mode, charts: charts.length });

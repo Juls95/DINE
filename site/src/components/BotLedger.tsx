@@ -16,7 +16,9 @@ function aporte(agent: AgentCard, bundle: Bundle): string {
   const run = last ? `${last.summary} (${last.at})` : "sin corrida todavía";
   if (agent.id === "beary") {
     const discarded = Object.values(bundle.beary.discard_reasons).reduce((n, x) => n + x, 0);
-    return `${run}. Descartó ${discarded} posts que no pasaron citas, cuentas o fecha.`;
+    const notionHits = bundle.beary.notion?.hits.length;
+    const notion = notionHits !== undefined ? ` Notion: ${notionHits} filas NEAR.` : "";
+    return `${run}. Descartó ${discarded} posts que no pasaron citas, cuentas o fecha.${notion}`;
   }
   if (agent.id === "bison") {
     const chart = bundle.charts.find((c) => c.agent === "bison");

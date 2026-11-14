@@ -16,6 +16,11 @@ const EnvSchema = z.object({
   INTENTS_JWT: z.string().min(1).optional(),
   INTENTS_CONTRACT: z.string().min(1).default("intents.near"),
   INTENTS_WINDOW_DAYS: z.coerce.number().int().positive().default(90),
+  NOTION_TOKEN: z.string().min(1).optional(),
+  NOTION_VERSION: z.string().min(1).default("2022-06-28"),
+  NOTION_DB_TICKERS_INFO: z.string().min(1).optional(),
+  NOTION_DB_X_CREATIVE: z.string().min(1).optional(),
+  NOTION_DB_X_ANALYSES: z.string().min(1).optional(),
 });
 
 export type Env = z.infer<typeof EnvSchema>;

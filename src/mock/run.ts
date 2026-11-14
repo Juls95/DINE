@@ -33,7 +33,7 @@ export function buildMockInputs(root = dataRoot("mock")): Inputs {
   };
   const bearyDaily = mockBeary(rng, MOCK_END, 5, addDays(MOCK_END, -7));
   const bearyWeekly = [...new Set(bearyDaily.map((d) => weekStart(d.date)))].map((monday) => buildWeekly(bearyDaily, monday));
-  return { mode: "mock", manifest, bison: datasets as BisonData, bearyDaily, bearyWeekly };
+  return { mode: "mock", manifest, bison: datasets as BisonData, bearyDaily, bearyWeekly, bearyNotion: null };
 }
 
 function main() {

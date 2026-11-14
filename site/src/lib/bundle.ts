@@ -1,7 +1,7 @@
 import { z } from "zod";
 import type { AgentCard } from "../../../src/bul/agents";
 import type { Divergence, Metric, SpikeEvent } from "../../../src/bul/types";
-import type { BearyWeekly, ScoredPost } from "../../../src/schemas/beary";
+import type { BearyNotionSnapshot, BearyWeekly, ScoredPost } from "../../../src/schemas/beary";
 
 export type ChartView = {
   id: string;
@@ -24,7 +24,12 @@ export type Bundle = {
   charts: ChartView[];
   divergences: Divergence[];
   spikes: SpikeEvent[];
-  beary: { weeks: BearyWeekly[]; latest_posts: ScoredPost[]; discard_reasons: Record<string, number> };
+  beary: {
+    weeks: BearyWeekly[];
+    latest_posts: ScoredPost[];
+    discard_reasons: Record<string, number>;
+    notion: BearyNotionSnapshot | null;
+  };
   agents: AgentCard[];
 };
 

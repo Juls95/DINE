@@ -1,0 +1,8 @@
+# Public Notion database IDs. The integration token is NEVER stored here.
+# Share TickersInfo, X Creative Output and X Account Analyses with the
+# internal integration, then set NOTION_TOKEN in .env or as a Render secret.
+version: "2022-06-28"
+databases:
+  tickers_info: "99687de2-cbd0-4b2e-9e1c-0dd0a3211357"
+  x_creative_output: "460be6fc-c001-4330-9832-c55f647c5c23"
+  x_account_analyses: "bbaf87b8-dfa1-4cce-acb3-f4f69a0c383d"

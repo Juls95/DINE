@@ -1,6 +1,6 @@
 # NEAR RDC · Research Development Council
 
-> **English abstract (for automated judges).** Evidence-first, long-term investment thesis for NEAR (track `thesis`, NEAR HACKATHON 2026). Three agents: **Beary** reads a fixed list of X accounts with xAI `x_search`, **Bison** queries `bigquery-public-data.crypto_near_mainnet_us` (always filtered on `block_date`) plus the NEAR Intents Explorer API, and **Bul** rebuilds every chart, a static dashboard and `THESIS.md` from raw files with one command. A verifier fails the build if any number in the thesis or chart text was not computed from data. Everything below is in Spanish; technical names stay in English.
+> **English abstract (for automated judges).** Evidence-first, long-term investment thesis for NEAR (track `thesis`, NEAR HACKATHON 2026). Three agents: **Beary** reads TickersInfo, X Creative Output and X Account Analyses in Notion (token only via `NOTION_TOKEN`) plus a fixed list of X accounts with xAI `x_search`, **Bison** queries `bigquery-public-data.crypto_near_mainnet_us` (always filtered on `block_date`) plus the NEAR Intents Explorer API, and **Bul** rebuilds every chart, a static dashboard and `THESIS.md` from raw files with one command. A verifier fails the build if any number in the thesis or chart text was not computed from data. Everything below is in Spanish; technical names stay in English.
 
 ## Qué es
 
@@ -26,11 +26,21 @@ Requisitos: Node 22 y pnpm 10 (`corepack enable`). pnpm descarga Node 22.21.1 po
 
 Con credenciales (ver `.env.example`): `pnpm refresh` descarga datos reales, escribe `data/` y `THESIS.md`, y reconstruye el sitio. Sin credenciales, `pnpm bul:build` reconstruye todo desde los archivos de `data/` ya commiteados.
 
+### Notion y Render (Beary)
+
+El navegador no llama a Notion: CSP es `connect-src 'self'`. El token solo existe en el entorno de build.
+
+1. Crea una Internal Integration en [notion.so/my-integrations](https://www.notion.so/my-integrations) con permiso de lectura.
+2. Comparte **TickersInfo**, **X Creative Output** y **X Account Analyses** con esa integration.
+3. Local: copia `.env.example` → `.env` y pega el token en `NOTION_TOKEN`. Nunca lo commitees.
+4. Render → Environment → `NOTION_TOKEN` como secret (`sync: false` en `render.yaml`). Los IDs de tabla ya van en el YAML; no son secretos.
+5. `pnpm beary:notion` (o un deploy) escribe `data/beary/notion/near.json`. El sitio lo muestra en **Social**.
+
 ## Cómo funciona
 
 | Agente | Fuente | Qué produce |
 | --- | --- | --- |
-| **Beary** (lectura psicológica) | xAI Responses API con `x_search`, limitada a `config/beary.handles.yaml` y a un día por consulta | Posts verificados contra las citas de xAI, puntaje de credibilidad calculado en código y un índice semanal de sentimiento. Guarda paráfrasis y URLs, nunca el texto completo de un post. |
+| **Beary** (lectura psicológica) | Notion (`TickersInfo`, `X Creative Output`, `X Account Analyses`) con `NOTION_TOKEN` + xAI Responses API con `x_search`, limitada a `config/beary.handles.yaml` y a un día por consulta | Expediente NEAR en `data/beary/notion/near.json` (filtra el inglés *near*/*nearly*), posts verificados contra las citas de xAI, puntaje de credibilidad calculado en código y un índice semanal de sentimiento. Guarda paráfrasis y URLs, nunca el texto completo de un post. El token no entra al bundle ni al git. |
 | **Bison** (lectura técnica) | BigQuery `crypto_near_mainnet_us` (`blocks`, `transactions`, `receipt_actions`) y Intents Explorer `GET /api/v0/transactions` | Cuentas activas, transacciones, cuentas nuevas, uso de contratos, concentración, meta-transacciones y volumen de 1Click Swap. Cada query pasa por un dry run con tope `BQ_MAX_BYTES`. |
 | **Bul** (síntesis) | Archivos de Beary y Bison | Régimen de adopción, picos frente a cambios estructurales, correlación con rezago, confirmadores y espejismos, `THESIS.md`, el dashboard y `bundle.json`. |
 
@@ -47,7 +57,8 @@ Reglas que el código hace cumplir:
 | --- | --- |
 | `pnpm demo` | Escenario simulado de punta a punta. |
 | `pnpm bison:fetch` | BigQuery e Intents Explorer, a `data/raw/`. |
-| `pnpm beary:run` / `pnpm beary:backfill` | Ayer en vivo / cuatro semanas reconstruidas, a `data/beary/`. |
+| `pnpm beary:notion` | Lee las tres tablas de Notion y escribe `data/beary/notion/near.json`. Sin `NOTION_TOKEN` sale sin error (Render puede desplegar igual). |
+| `pnpm beary:run` / `pnpm beary:backfill` | Ayer en vivo / cuatro semanas reconstruidas, a `data/beary/` (también corre Notion si hay token). |
 | `pnpm bul:build` | Métricas, `THESIS.md`, `bundle.json` y el sitio estático en `dist/`. |
 | `pnpm refresh` | Los tres anteriores en orden. |
 | `pnpm verify` | Comprueba la regla de no inventar números. |

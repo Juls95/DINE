@@ -13,6 +13,7 @@ export function MethodologyPage() {
       <ul>
         <li><strong>Bison · BigQuery:</strong> <code>bigquery-public-data.crypto_near_mainnet_us</code>, tablas <code>blocks</code>, <code>transactions</code> y <code>receipt_actions</code>. Toda query filtra por <code>block_date</code> y pasa por un dry run con tope de bytes.</li>
         <li><strong>Bison · Intents Explorer:</strong> <code>GET /api/v0/transactions</code>, solo swaps 1Click con estado SUCCESS, con JWT del Partner Dashboard y una solicitud cada cinco segundos.</li>
+        <li><strong>Beary · Notion:</strong> TickersInfo, X Creative Output y X Account Analyses vía <code>POST /v1/databases/{"{id}"}/query</code>. El token vive en <code>NOTION_TOKEN</code> (env / secreto de Render); los IDs de tabla no son secretos. Beary se queda con filas NEAR, no con el inglés near/nearly.</li>
         <li><strong>Beary · xAI:</strong> Responses API con la herramienta <code>x_search</code>, limitada a una lista fija de cuentas y a un día por consulta.</li>
       </ul>
 

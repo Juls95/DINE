@@ -8,6 +8,7 @@ import { addDays, isoDay, weekStart } from "../lib/dates";
 import { dataRoot, readJson, writeJson } from "../lib/files";
 import { BearyDaily, HandleConfig, type HandleTier } from "../schemas/beary";
 import { structureAnswer, verifyPosts } from "./extract";
+import { ingestFromEnv } from "./notion/ingest";
 import { scorePosts } from "./score";
 import { buildWeekly } from "./weekly";
 
@@ -41,6 +42,14 @@ async function main() {
   const tiers = new Map<string, HandleTier>(config.handles.map((h) => [h.handle.toLowerCase(), h.tier]));
   const llm = createLlmClient(env);
   const root = dataRoot("live");
+
+  if (env.NOTION_TOKEN) {
+    const snap = await ingestFromEnv({ env, token: env.NOTION_TOKEN });
+    writeJson(`${root}/beary/notion/near.json`, snap);
+    log.info("notion snapshot", { hits: snap.hits.length, scanned: snap.counts.scanned_pages });
+  } else {
+    log.warn("NOTION_TOKEN missing; Beary continues without Notion tables");
+  }
 
   const { backfillWeeks, date } = parseArgs(process.argv);
   const yesterday = addDays(isoDay(new Date()), -1);

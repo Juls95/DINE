@@ -1,4 +1,5 @@
-# Static site. The build only reads committed files in data/ and needs no secrets.
+# Static site. The browser never talks to Notion (CSP connect-src 'self').
+# NOTION_TOKEN is a Render secret used only at build time by `pnpm beary:notion`.
 # Deploys only after CI passes on main; pushing is the manual weekly review step.
 services:
   - type: web
@@ -6,13 +7,23 @@ services:
     runtime: static
     branch: main
     autoDeployTrigger: checksPass
-    buildCommand: corepack enable && pnpm install --frozen-lockfile && pnpm bul:build
+    buildCommand: corepack enable && pnpm install --frozen-lockfile && pnpm beary:notion && pnpm bul:build
     staticPublishPath: dist
     envVars:
       - key: NODE_VERSION
         value: 22.21.1
       - key: DATA_MODE
         value: live
+      - key: NOTION_TOKEN
+        sync: false
+      - key: NOTION_VERSION
+        value: "2022-06-28"
+      - key: NOTION_DB_TICKERS_INFO
+        value: "99687de2-cbd0-4b2e-9e1c-0dd0a3211357"
+      - key: NOTION_DB_X_CREATIVE
+        value: "460be6fc-c001-4330-9832-c55f647c5c23"
+      - key: NOTION_DB_X_ANALYSES
+        value: "bbaf87b8-dfa1-4cce-acb3-f4f69a0c383d"
     headers:
       - path: /*
         name: X-Content-Type-Options
