@@ -8,21 +8,21 @@ import { modeBanner, TEMPLATE_PATH, verifyArtifacts } from "./verify";
 
 const ctx: RenderContext = {
   metrics: { a: { id: "a", label: "A", value: 12.345, unit: "pct", source: "test" } },
-  labels: { regime: { value: "expansión" } },
-  blocks: { inner: "valor {{metric:a}}" },
+  labels: { regime: { value: "expansion" } },
+  blocks: { inner: "value {{metric:a}}" },
 };
 
 describe("render", () => {
-  it("formats metrics in es-MX and resolves nested blocks", () => {
-    expect(render("{{block:inner}} · {{label:regime}} · {{param:lag_min_r}}", ctx)).toBe("valor 12.3 % · expansión · 0.3");
+  it("formats metrics in en-US and resolves nested blocks", () => {
+    expect(render("{{block:inner}} · {{label:regime}} · {{param:lag_min_r}}", ctx)).toBe("value 12.3% · expansion · 0.3");
   });
 
   it("throws on unknown placeholders", () => {
     expect(() => render("{{metric:nope}}", ctx)).toThrow(MissingPlaceholderError);
   });
 
-  it("says 'no disponible' instead of inventing a value", () => {
-    expect(formatMetric({ id: "x", label: "x", value: null, unit: "count", source: "t" })).toBe("no disponible");
+  it("says 'not available' instead of inventing a value", () => {
+    expect(formatMetric({ id: "x", label: "x", value: null, unit: "count", source: "t" })).toBe("not available");
   });
 
   it("strayDigits allows only 1Click and section numbers", () => {
@@ -44,19 +44,19 @@ describe("mock scenario end to end", () => {
   it("flags a literal number written into a sentence", () => {
     const c = buildContext(analysis);
     c.blocks.mode_banner = modeBanner("mock");
-    const charts = buildCharts(inputs, analysis).map((ch, i) => (i === 0 ? { ...ch, sentence: "Creció 40 % esta semana." } : ch));
-    expect(verifyArtifacts("# Tesis", c, charts).some((v) => v.check.includes("número fuera de placeholder"))).toBe(true);
+    const charts = buildCharts(inputs, analysis).map((ch, i) => (i === 0 ? { ...ch, sentence: "It grew 40 % this week." } : ch));
+    expect(verifyArtifacts("# Thesis", c, charts).some((v) => v.check.includes("number outside a placeholder"))).toBe(true);
   });
 
   it("classifies the concentrated mock airdrop as a spike, not adoption", () => {
     const spikes = classifySpikes(inputs);
     expect(spikes.length).toBeGreaterThan(0);
-    expect(spikes.every((s) => s.classification === "pico")).toBe(true);
+    expect(spikes.every((s) => s.classification === "spike")).toBe(true);
   });
 
   it("finds the designed 1Click lead and the mirage week", () => {
-    expect(analysis.labels.lead_status?.value).toBe("se observa");
-    expect(analysis.divergences.some((d) => d.quadrant === "espejismo")).toBe(true);
+    expect(analysis.labels.lead_status?.value).toBe("observed");
+    expect(analysis.divergences.some((d) => d.quadrant === "mirage")).toBe(true);
   });
 
   it("labels every Beary week as live or reconstructed", () => {

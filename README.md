@@ -1,79 +1,79 @@
 # NEAR RDC · Research Development Council
 
-> **English abstract (for automated judges).** Evidence-first, long-term investment thesis for NEAR (track `thesis`, NEAR HACKATHON 2026). Three agents: **Beary** reads TickersInfo, X Creative Output and X Account Analyses in Notion (token only via `NOTION_TOKEN`) plus a fixed list of X accounts with xAI `x_search`, **Bison** queries `bigquery-public-data.crypto_near_mainnet_us` (always filtered on `block_date`) plus the NEAR Intents Explorer API, and **Bul** rebuilds every chart, a static dashboard and `THESIS.md` from raw files with one command. A verifier fails the build if any number in the thesis or chart text was not computed from data. Everything below is in Spanish; technical names stay in English.
+> **Abstract.** Evidence-first, long-term investment thesis for NEAR (track `thesis`, NEAR HACKATHON 2026). Three agents: **Beary** reads TickersInfo, X Creative Output and X Account Analyses in Notion (token only via `NOTION_TOKEN`) plus a fixed list of X accounts with xAI `x_search`, **Bison** queries `bigquery-public-data.crypto_near_mainnet_us` (always filtered on `block_date`) plus the NEAR Intents Explorer API, and **Bul** rebuilds every chart, a static dashboard and `THESIS.md` from raw files with one command. A verifier fails the build if any number in the thesis or chart text was not computed from data.
 
-## Qué es
+## What it is
 
-Una tesis de inversión de largo plazo sobre NEAR que se juzga por su evidencia, no por su convicción. La hipótesis es que el uso de NEAR se desplaza hacia la ejecución cross-chain (1Click Swap sobre NEAR Intents) y que ese volumen anticipa la actividad on-chain general. La tesis dice de antemano qué datos la invalidarían.
+A long-term investment thesis on NEAR that is judged by its evidence, not by its conviction. The hypothesis is that NEAR usage is shifting toward cross-chain execution (1Click Swap on NEAR Intents) and that this volume leads general on-chain activity. The thesis states in advance which data would invalidate it.
 
-## Qué problema resuelve
+## What problem it solves
 
-Las tesis de inversión cripto suelen mezclar cifras sin fuente, capturas de pantalla y opiniones. Aquí cada cifra sale de una query versionada o de un endpoint documentado, cada gráfico muestra su query y una frase simple, y cualquiera puede reconstruir todo desde los datos crudos.
+Crypto investment theses tend to mix unsourced figures, screenshots and opinion. Here every figure comes from a versioned query or a documented endpoint, every chart shows its query and a plain sentence, and anyone can rebuild everything from the raw data.
 
-## Pruébalo
+## Try it
 
-Requisitos: Node 22 y pnpm 10 (`corepack enable`). pnpm descarga Node 22.21.1 por `.npmrc` si hace falta.
+Requirements: Node 22 and pnpm 10 (`corepack enable`). pnpm downloads Node 22.21.1 through `.npmrc` if needed.
 
-| Haz esto | Verás esto |
+| Do this | You will see this |
 | --- | --- |
-| `pnpm install && pnpm demo` | Datos simulados en `data/mock/`, `examples/THESIS.mock.md` y el sitio en `dist/`, sin credenciales. |
-| `pnpm preview` y abre `http://localhost:4173` | El sitio con una franja roja "DATOS SIMULADOS". |
-| Ve a **Ágora** | Beary, Bison y Bul evaluados por separado, cada uno con sus validaciones, y la tabla semanal de sentimiento contra actividad. |
-| Abre un agente, por ejemplo **Bison** | Qué hace, entradas, salidas, corridas y validaciones (tope de bytes, filtro por `block_date`, frescura de datos). |
-| Ve a **Dashboard** y abre "Query" bajo un gráfico | El SQL exacto o el endpoint que produjo ese gráfico. |
-| Escribe un número literal en `src/bul/thesis/THESIS.template.md` y corre `DATA_MODE=mock pnpm verify` | El build falla y señala la línea: ningún número puede salir de texto escrito a mano. |
-| `pnpm test` | La suite de Jest: guardas de costo, paginación y rate limit, filtro anti-alucinación de Beary, cálculo de métricas y componentes del sitio. |
+| `pnpm install && pnpm demo` | Simulated data in `data/mock/`, `examples/THESIS.mock.md` and the site in `dist/`, with no credentials. |
+| `pnpm preview` and open `http://localhost:4173` | The site with a red "SIMULATED DATA" strip. |
+| Go to **Agora** | Beary, Bison and Bul evaluated separately, each with its validations, and the weekly table of sentiment against activity. |
+| Open an agent, for example **Bison** | What it does, inputs, outputs, runs and validations (byte cap, `block_date` filter, data freshness). |
+| Go to **Dashboard** and open "Query" under a chart | The exact SQL or endpoint that produced that chart. |
+| Type a literal number into `src/bul/thesis/THESIS.template.md` and run `DATA_MODE=mock pnpm verify` | The build fails and points at the line: no number can come from hand-written text. |
+| `pnpm test` | The Jest suite: cost guards, pagination and rate limiting, Beary's anti-hallucination filter, metric computation and the site components. |
 
-Con credenciales (ver `.env.example`): `pnpm refresh` descarga datos reales, escribe `data/` y `THESIS.md`, y reconstruye el sitio. Sin credenciales, `pnpm bul:build` reconstruye todo desde los archivos de `data/` ya commiteados.
+With credentials (see `.env.example`): `pnpm refresh` downloads real data, writes `data/` and `THESIS.md`, and rebuilds the site. Without credentials, `pnpm bul:build` rebuilds everything from the committed files in `data/`.
 
-### Notion y Render (Beary)
+### Notion and Render (Beary)
 
-El navegador no llama a Notion: CSP es `connect-src 'self'`. El token solo existe en el entorno de build.
+The browser never calls Notion: the CSP is `connect-src 'self'`. The token only exists in the build environment.
 
-1. Crea una Internal Integration en [notion.so/my-integrations](https://www.notion.so/my-integrations) con permiso de lectura.
-2. Comparte **TickersInfo**, **X Creative Output** y **X Account Analyses** con esa integration.
-3. Local: copia `.env.example` → `.env` y pega el token en `NOTION_TOKEN`. Nunca lo commitees.
-4. Render → Environment → `NOTION_TOKEN` como secret (`sync: false` en `render.yaml`). Los IDs de tabla ya van en el YAML; no son secretos.
-5. `pnpm beary:notion` (o un deploy) escribe `data/beary/notion/near.json`. El sitio lo muestra en **Social**.
+1. Create an Internal Integration at [notion.so/my-integrations](https://www.notion.so/my-integrations) with read permission.
+2. Share **TickersInfo**, **X Creative Output** and **X Account Analyses** with that integration.
+3. Locally: copy `.env.example` to `.env` and paste the token into `NOTION_TOKEN`. Never commit it.
+4. Render → Environment → `NOTION_TOKEN` as a secret (`sync: false` in `render.yaml`). The table IDs are already in the YAML; they are not secrets.
+5. `pnpm beary:notion` (or a deploy) writes `data/beary/notion/near.json`. The site shows it under **Social**.
 
-## Cómo funciona
+## How it works
 
-| Agente | Fuente | Qué produce |
+| Agent | Source | What it produces |
 | --- | --- | --- |
-| **Beary** (lectura psicológica) | Notion (`TickersInfo`, `X Creative Output`, `X Account Analyses`) con `NOTION_TOKEN` + xAI Responses API con `x_search`, limitada a `config/beary.handles.yaml` y a un día por consulta | Expediente NEAR en `data/beary/notion/near.json` (filtra el inglés *near*/*nearly*), posts verificados contra las citas de xAI, puntaje de credibilidad calculado en código y un índice semanal de sentimiento. Guarda paráfrasis y URLs, nunca el texto completo de un post. El token no entra al bundle ni al git. |
-| **Bison** (lectura técnica) | BigQuery `crypto_near_mainnet_us` (`blocks`, `transactions`, `receipt_actions`) y Intents Explorer `GET /api/v0/transactions` | Cuentas activas, transacciones, cuentas nuevas, uso de contratos, concentración, meta-transacciones y volumen de 1Click Swap. Cada query pasa por un dry run con tope `BQ_MAX_BYTES`. |
-| **Bul** (síntesis) | Archivos de Beary y Bison | Régimen de adopción, picos frente a cambios estructurales, correlación con rezago, confirmadores y espejismos, `THESIS.md`, el dashboard y `bundle.json`. |
+| **Beary** (psychological read) | Notion (`TickersInfo`, `X Creative Output`, `X Account Analyses`) with `NOTION_TOKEN` + xAI Responses API with `x_search`, limited to `config/beary.handles.yaml` and one day per query | A NEAR dossier in `data/beary/notion/near.json` (it filters out the English words *near*/*nearly*), posts verified against xAI's citations, a credibility score computed in code and a weekly sentiment index. It stores paraphrases and URLs, never the full text of a post. The token never reaches the bundle or git. |
+| **Bison** (technical read) | BigQuery `crypto_near_mainnet_us` (`blocks`, `transactions`, `receipt_actions`) and the Intents Explorer `GET /api/v0/transactions` | Active accounts, transactions, new accounts, contract usage, concentration, meta-transactions and 1Click Swap volume. Every query goes through a dry run with the `BQ_MAX_BYTES` cap. |
+| **Bul** (synthesis) | Files from Beary and Bison | Adoption regime, spikes versus structural changes, lagged correlation, confirmations and mirages, `THESIS.md`, the dashboard and `bundle.json`. |
 
-Reglas que el código hace cumplir:
+Rules the code enforces:
 
-- **No inventar números.** `THESIS.md` y las frases de los gráficos solo contienen placeholders (`{{metric:id}}`) que Bul rellena con valores calculados. `pnpm verify` renderiza todo con un centinela y falla si queda cualquier dígito fuera de un placeholder.
-- **Lo que no se puede medir se dice.** La sección "Métricas no computables" de la tesis lista precio, TVL, fees en USD, volumen total de Intents y humanos únicos.
-- **Datos simulados y reales no se mezclan.** `DATA_MODE=mock` escribe en carpetas ignoradas por git y el build falla si encuentra artefactos de otro modo.
-- **El modelo de lenguaje es intercambiable.** `LLM_PROVIDER=gemini|xai` y `LLM_MODEL` eligen el modelo de estructuración, sin cambiar código.
+- **Never invent numbers.** `THESIS.md` and the chart sentences contain only placeholders (`{{metric:id}}`) that Bul fills with computed values. `pnpm verify` renders everything with a sentinel and fails if any digit is left outside a placeholder.
+- **What cannot be measured is said.** The thesis section "Metrics that cannot be computed" lists price, TVL, USD fees, total Intents volume and unique humans.
+- **Simulated and real data are never mixed.** `DATA_MODE=mock` writes to git-ignored folders and the build fails if it finds artifacts from another mode.
+- **The language model is swappable.** `LLM_PROVIDER=gemini|xai` and `LLM_MODEL` choose the structuring model without code changes.
 
-## Comandos
+## Commands
 
-| Comando | Qué hace |
+| Command | What it does |
 | --- | --- |
-| `pnpm demo` | Escenario simulado de punta a punta. |
-| `pnpm bison:fetch` | BigQuery e Intents Explorer, a `data/raw/`. |
-| `pnpm beary:notion` | Lee las tres tablas de Notion y escribe `data/beary/notion/near.json`. Sin `NOTION_TOKEN` sale sin error (Render puede desplegar igual). |
-| `pnpm beary:run` / `pnpm beary:backfill` | Ayer en vivo / cuatro semanas reconstruidas, a `data/beary/` (también corre Notion si hay token). |
-| `pnpm bul:build` | Métricas, `THESIS.md`, `bundle.json` y el sitio estático en `dist/`. |
-| `pnpm refresh` | Los tres anteriores en orden. |
-| `pnpm verify` | Comprueba la regla de no inventar números. |
-| `pnpm check` | Lint (warnings cuentan como errores), typecheck y tests. |
+| `pnpm demo` | The simulated scenario end to end. |
+| `pnpm bison:fetch` | BigQuery and the Intents Explorer, into `data/raw/`. |
+| `pnpm beary:notion` | Reads the three Notion tables and writes `data/beary/notion/near.json`. Without `NOTION_TOKEN` it exits cleanly (Render can still deploy). |
+| `pnpm beary:run` / `pnpm beary:backfill` | Yesterday live / four reconstructed weeks, into `data/beary/` (it also runs Notion if a token is set). |
+| `pnpm bul:build` | Metrics, `THESIS.md`, `bundle.json` and the static site in `dist/`. |
+| `pnpm refresh` | The three above, in order. |
+| `pnpm verify` | Checks the never-invent-numbers rule. |
+| `pnpm check` | Lint (warnings count as errors), typecheck and tests. |
 
-## Ventana del hackathon y disclosure
+## Hackathon window and disclosure
 
-- Todo el código de este repositorio se escribió durante NEAR HACKATHON (desde 2026-11-01). No hay producto previo en otra cadena.
-- Partes del código y del texto se generaron con asistencia de IA.
-- No es asesoría financiera.
+- All the code in this repository was written during NEAR HACKATHON (from 2026-11-01). There is no earlier product on another chain.
+- Parts of the code and text were generated with AI assistance.
+- Not financial advice.
 
-## Librerías
+## Libraries
 
-TypeScript, tsx, Vite, React, Vega, Vega-Lite y vega-embed, zod, debug, yaml, `@google-cloud/bigquery`; Jest, babel-jest, React Testing Library, ESLint con typescript-eslint. No se usaron plantillas ni librerías propias previas.
+TypeScript, tsx, Vite, React, Vega, Vega-Lite and vega-embed, zod, debug, yaml, `@google-cloud/bigquery`; Jest, babel-jest, React Testing Library, ESLint with typescript-eslint. No earlier templates or in-house libraries were used.
 
-## Licencia
+## License
 
-MIT, ver `LICENSE`.
+MIT, see `LICENSE`.

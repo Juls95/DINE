@@ -11,32 +11,32 @@ function Sprite({ id }: { id: AgentCard["id"] }) {
   return <SpriteBul />;
 }
 
-function aporte(agent: AgentCard, bundle: Bundle): string {
+function contribution(agent: AgentCard, bundle: Bundle): string {
   const last = agent.runs[0];
-  const run = last ? `${last.summary} (${last.at})` : "sin corrida todavía";
+  const run = last ? `${last.summary} (${last.at})` : "no run yet";
   if (agent.id === "beary") {
     const discarded = Object.values(bundle.beary.discard_reasons).reduce((n, x) => n + x, 0);
     const notionHits = bundle.beary.notion?.hits.length;
-    const notion = notionHits !== undefined ? ` Notion: ${notionHits} filas NEAR.` : "";
-    return `${run}. Descartó ${discarded} posts que no pasaron citas, cuentas o fecha.${notion}`;
+    const notion = notionHits !== undefined ? ` Notion: ${notionHits} NEAR rows.` : "";
+    return `${run}. Discarded ${discarded} posts that failed citation, account or date checks.${notion}`;
   }
   if (agent.id === "bison") {
     const chart = bundle.charts.find((c) => c.agent === "bison");
     return chart ? `${run}. ${chart.sentence}` : run;
   }
   const week = bundle.divergences.at(-1);
-  return week ? `${run}. Última semana cruzada: ${week.week} · ${week.quadrant}.` : run;
+  return week ? `${run}. Last week crossed: ${week.week} · ${week.quadrant}.` : run;
 }
 
 export function BotLedger({ agent, bundle }: { agent: AgentCard; bundle: Bundle }) {
   const fails = agent.validations.filter((v) => v.status === "fail").length;
   const warns = agent.validations.filter((v) => v.status === "warn").length;
   return (
-    <article className={`ledger-card agent-${agent.id}`} id={`razonamiento-${agent.id}`}>
+    <article className={`ledger-card agent-${agent.id}`} id={`reasoning-${agent.id}`}>
       <header className="ledger-head">
         <Sprite id={agent.id} />
         <div>
-          <p className="ledger-kicker">Pensador · {agent.id}</p>
+          <p className="ledger-kicker">Thinker · {agent.id}</p>
           <h3>{agent.name}</h3>
           <p>{agent.role}</p>
         </div>
@@ -44,10 +44,10 @@ export function BotLedger({ agent, bundle }: { agent: AgentCard; bundle: Bundle 
       </header>
 
       <div className="ledger-block">
-        <h4>Aporte</h4>
-        <p>{aporte(agent, bundle)}</p>
+        <h4>Contribution</h4>
+        <p>{contribution(agent, bundle)}</p>
         <p className="muted">
-          Salidas:{" "}
+          Outputs:{" "}
           {agent.outputs.map((o, i) => (
             <span key={o}>{i > 0 ? " · " : null}<code>{o}</code></span>
           ))}
@@ -55,7 +55,7 @@ export function BotLedger({ agent, bundle }: { agent: AgentCard; bundle: Bundle 
       </div>
 
       <div className="ledger-block">
-        <h4>Razonamiento</h4>
+        <h4>Reasoning</h4>
         <ol className="ledger-steps">
           {agent.does.map((step, i) => (
             <li key={step}>
@@ -67,7 +67,7 @@ export function BotLedger({ agent, bundle }: { agent: AgentCard; bundle: Bundle 
       </div>
 
       <div className="ledger-block">
-        <h4>Validez</h4>
+        <h4>Validity</h4>
         <ul className="validations">
           {agent.validations.map((v) => (
             <li key={v.name}>
@@ -79,7 +79,7 @@ export function BotLedger({ agent, bundle }: { agent: AgentCard; bundle: Bundle 
         </ul>
       </div>
 
-      <a className="ledger-more" href={`#/agentes/${agent.id}`}>Expediente de {agent.name} →</a>
+      <a className="ledger-more" href={`#/agents/${agent.id}`}>{agent.name}'s file →</a>
     </article>
   );
 }

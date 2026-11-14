@@ -761,9 +761,9 @@ th { color: var(--muted); font-size: 0.7rem; letter-spacing: 0.08em; text-transf
 .chart-canvas { min-height: 220px; }
 .chart summary { cursor: pointer; color: var(--muted); }
 .quadrant { padding: 2px 8px; font-size: 0.78rem; }
-.q-confirmación { color: var(--ok); }
-.q-espejismo { color: var(--fail); }
-.q-oportunidad-no-narrada { color: var(--bul); }
+.q-confirmation { color: var(--ok); }
+.q-mirage { color: var(--fail); }
+.q-unnarrated-opportunity { color: var(--bul); }
 .validations { list-style: none; padding: 0; display: flex; flex-direction: column; gap: 8px; }
 .validations li { display: grid; grid-template-columns: 90px 1fr; gap: 4px 10px; border: 1px solid var(--line); padding: 10px; }
 .vega-embed { background: transparent !important; }

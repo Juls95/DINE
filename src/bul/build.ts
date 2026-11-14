@@ -58,7 +58,7 @@ function main() {
     agents: buildAgents(inputs, analysis, violations, env.BQ_MAX_BYTES),
   });
   log.info("build done", { mode, charts: charts.length });
-  process.stdout.write(`bul:build OK (${mode}) · ${charts.length} gráficos · ${Object.keys(analysis.metrics).length} métricas\n`);
+  process.stdout.write(`bul:build OK (${mode}) · ${charts.length} charts · ${Object.keys(analysis.metrics).length} metrics\n`);
 }
 
 main();

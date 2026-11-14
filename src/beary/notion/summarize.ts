@@ -1,17 +1,24 @@
-import { BearyNotionHit, BearyNotionSnapshot, type NotionSource } from "../../schemas/beary";
+import { BearyNotionHit, BearyNotionSnapshot, type NotionSentiment, type NotionSource } from "../../schemas/beary";
 import type { NotionPage } from "./client";
 import { propertyText, readProps } from "./client";
 import { isNearTicker, mentionsNearFields } from "./match";
 
 const EXCERPT = 800;
-const SENTIMENT = ["Positivo", "Neutral", "Negativo", "Mixto"] as const;
+const SENTIMENT = ["positive", "neutral", "negative", "mixed"] as const;
+
+/** The Notion select options are defined in Spanish by the workspace; the pipeline normalizes them to English. */
+const SENTIMENT_MAP: Record<string, NotionSentiment> = { positivo: "positive", neutral: "neutral", negativo: "negative", mixto: "mixed" };
+
+export function normalizeSentiment(raw: string): NotionSentiment | null {
+  return SENTIMENT_MAP[raw.trim().toLowerCase()] ?? null;
+}
 
 const THEMES: { id: string; title: string; test: (blob: string) => boolean }[] = [
   { id: "intents_security", title: "NEAR Intents / Omni", test: (t) => /intents|omni|exploit|reembolso|refund/.test(t) },
-  { id: "whale", title: "Posicionamiento on-chain", test: (t) => /ballena|whale|mk4|10x/.test(t) },
+  { id: "whale", title: "On-chain positioning", test: (t) => /ballena|whale|mk4|10x/.test(t) },
   { id: "brave", title: "NEAR × Brave", test: (t) => /brave/.test(t) },
-  { id: "conviction", title: "Convicción de cuentas", test: (t) => /convicci[oó]n|top 10|fuerza relativa|\brs\b|alianza/.test(t) },
-  { id: "tape", title: "Cinta de precio y alts", test: (t) => /bleeding|fake.?out|pennant|triangle|nibble|longs|alts/.test(t) },
+  { id: "conviction", title: "Desk conviction", test: (t) => /convicci[oó]n|top 10|fuerza relativa|\brs\b|alianza/.test(t) },
+  { id: "tape", title: "Price tape and alts", test: (t) => /bleeding|fake.?out|pennant|triangle|nibble|longs|alts/.test(t) },
 ];
 
 function clip(text: string, max = EXCERPT): string {
@@ -25,10 +32,8 @@ function isoDate(raw: string): string | null {
 }
 
 function tally(hits: readonly BearyNotionHit[]) {
-  const out = { Positivo: 0, Neutral: 0, Negativo: 0, Mixto: 0 };
-  for (const h of hits) {
-    if (h.sentiment && h.sentiment in out) out[h.sentiment as keyof typeof out] += 1;
-  }
+  const out = { positive: 0, neutral: 0, negative: 0, mixed: 0 };
+  for (const h of hits) if (h.sentiment) out[h.sentiment] += 1;
   return out;
 }
 
@@ -45,9 +50,9 @@ function paragraphs(counts: BearyNotionSnapshot["counts"], hits: readonly BearyN
   const tickers = hits.filter((h) => h.source === "tickers_info");
   const out: string[] = [];
   out.push(
-    `Beary leyó TickersInfo, X Creative Output y X Account Analyses buscando NEAR (ticker o mención en mayúsculas, no el inglés "near"/"nearly"). ` +
-      `Quedaron ${counts.tickers} filas de TickersInfo, ${counts.creative} de X Creative Output y ${counts.analyses} de X Account Analyses, ` +
-      `tras escanear ${counts.scanned_pages} páginas y descartar ${counts.discarded_false_positives} coincidencias falsas.`,
+    `Beary read TickersInfo, X Creative Output and X Account Analyses looking for NEAR (the ticker or an upper-case mention, not the English words "near" or "nearly"). ` +
+      `${counts.tickers} TickersInfo rows, ${counts.creative} X Creative Output rows and ${counts.analyses} X Account Analyses rows remained, ` +
+      `after scanning ${counts.scanned_pages} pages and discarding ${counts.discarded_false_positives} false matches.`,
   );
   if (tickers.length) {
     out.push(
@@ -57,7 +62,7 @@ function paragraphs(counts: BearyNotionSnapshot["counts"], hits: readonly BearyN
     );
   }
   const withSent = SENTIMENT.map((k) => `${k} ${sentiment[k]}`).join(", ");
-  out.push(`Sentimiento declarado en las filas con etiqueta: ${withSent}. Las cifras que aparecen en esas filas son afirmaciones de las fuentes, no datos de Bison.`);
+  out.push(`Sentiment declared in the labelled rows: ${withSent}. Figures that appear in these rows are claims by the sources, not Bison data.`);
   return out;
 }
 
@@ -78,7 +83,7 @@ export function hitFromTicker(page: NotionPage): BearyNotionHit | null {
   return BearyNotionHit.parse({
     source: "tickers_info",
     page_id: page.id,
-    title: title || "sin ticker",
+    title: title || "untitled ticker",
     date: newsDate,
     sentiment: null,
     account: propertyText(p.Username) || null,
@@ -98,11 +103,11 @@ export function hitFromDesk(page: NotionPage, source: Exclude<NotionSource, "tic
   const account = propertyText(p["Cuenta analizada"]) || propertyText(p.Username);
   const date = isoDate(propertyText(p["Fecha del análisis"])) ?? isoDate(title);
   if (!mentionsNearFields(title, exec, insights, topic, posts, account)) return null;
-  const sentiment = propertyText(p["Sentimiento general"]) || null;
+  const sentiment = normalizeSentiment(propertyText(p["Sentimiento general"]));
   return BearyNotionHit.parse({
     source,
     page_id: page.id,
-    title: title || "sin título",
+    title: title || "untitled",
     date,
     sentiment,
     account: account || null,

@@ -23,7 +23,7 @@ export function Countdown() {
   }, []);
   return (
     <div className="count" aria-live="polite">
-      <span className="count-label">{t.done ? "Entrega cerrada" : "Entrega 14 nov 23:59 UTC"}</span>
+      <span className="count-label">{t.done ? "Submissions closed" : "Deadline Nov 14, 23:59 UTC"}</span>
       <ol>
         {([["days", t.days], ["hrs", t.hrs], ["mins", t.mins], ["secs", t.secs]] as const).map(([k, v]) => (
           <li key={k}>

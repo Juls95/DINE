@@ -132,7 +132,7 @@ describe("hit mapping", () => {
       "x_account_analyses",
     );
     expect(hit?.account).toBe("@arkham");
-    expect(hit?.sentiment).toBe("Neutral");
+    expect(hit?.sentiment).toBe("neutral");
     expect(hit?.date).toBe("2026-10-26");
 
     expect(
@@ -180,7 +180,7 @@ describe("summarize", () => {
           page_id: "2",
           title: "@Zeneca - 16 Oct 2026",
           date: "2026-10-16",
-          sentiment: "Positivo",
+          sentiment: "positive",
           account: "@Zeneca",
           topic: "NEAR x Brave",
           excerpt: "Alianza NEAR x Brave.",
@@ -189,9 +189,9 @@ describe("summarize", () => {
       ],
     });
     expect(snap.counts).toEqual({ tickers: 1, creative: 0, analyses: 1, scanned_pages: 5, discarded_false_positives: 2 });
-    expect(snap.sentiment_tally.Positivo).toBe(1);
+    expect(snap.sentiment_tally.positive).toBe(1);
     expect(snap.themes.map((t) => t.id)).toEqual(expect.arrayContaining(["intents_security", "brave"]));
-    expect(snap.paragraphs.join(" ")).toContain("2 coincidencias falsas");
+    expect(snap.paragraphs.join(" ")).toContain("discarding 2 false matches");
     expect(JSON.stringify(snap)).not.toMatch(/secret-notion|Bearer /);
   });
 });

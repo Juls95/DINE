@@ -62,27 +62,27 @@ export function ForumBar({ onComment }: { onComment?: () => void }) {
     <div className="forum-bar">
       <div className="hud-actions">
         <button type="button" className={`hud-btn ${up ? "is-on" : ""}`} aria-pressed={up} onClick={toggle}>
-          ▲ Respaldar <em>{up ? "1" : "0"}</em>
+          ▲ Back <em>{up ? "1" : "0"}</em>
         </button>
         <button type="button" className="hud-btn hud-ghost" aria-expanded={open} onClick={() => setOpen(!open)}>
-          💬 Comentar <em>{comments.length}</em>
+          💬 Comment <em>{comments.length}</em>
         </button>
       </div>
-      <p className="hud-note">Voto y comentarios quedan en este navegador. No son dato de NEAR.</p>
+      <p className="hud-note">Votes and comments stay in this browser. They are not NEAR data.</p>
       {open && (
         <form className="comment-form" onSubmit={submit}>
-          <label htmlFor="agora-comment">Añadir un comentario</label>
+          <label htmlFor="agora-comment">Add a comment</label>
           <textarea
             id="agora-comment"
             value={text}
             maxLength={MAX}
             rows={3}
-            placeholder="¿Qué cuestionas o qué te convence?"
+            placeholder="What do you question, or what convinces you?"
             onChange={(e) => setText(e.target.value)}
           />
           <div className="comment-form-row">
             <span>{text.length}/{MAX}</span>
-            <button type="submit" className="hud-btn">Publicar</button>
+            <button type="submit" className="hud-btn">Post</button>
           </div>
         </form>
       )}
@@ -90,7 +90,7 @@ export function ForumBar({ onComment }: { onComment?: () => void }) {
         <ul className="comment-list">
           {comments.map((c) => (
             <li key={c.id}>
-              <strong>Anónimo</strong>
+              <strong>Anonymous</strong>
               <time dateTime={c.at}>{c.at.slice(0, 10)}</time>
               <p>{c.text}</p>
             </li>

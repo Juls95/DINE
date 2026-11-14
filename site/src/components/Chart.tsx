@@ -52,9 +52,9 @@ export function Chart({ chart }: { chart: ChartView }) {
         <h3>{chart.title}</h3>
         <p>{chart.sentence}</p>
       </figcaption>
-      {error ? <div className="error-box">No se pudo dibujar el gráfico: {error}</div> : <div ref={ref} className="chart-canvas" aria-label={chart.title} />}
+      {error ? <div className="error-box">Could not draw the chart: {error}</div> : <div ref={ref} className="chart-canvas" aria-label={chart.title} />}
       <details>
-        <summary>{chart.query_sql ? `Query: ${chart.query_file}` : "Fuente"}</summary>
+        <summary>{chart.query_sql ? `Query: ${chart.query_file}` : "Source"}</summary>
         {chart.query_sql ? <pre>{chart.query_sql}</pre> : null}
         {chart.endpoint ? <pre>{chart.endpoint}</pre> : null}
       </details>

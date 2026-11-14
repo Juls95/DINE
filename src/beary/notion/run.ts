@@ -17,7 +17,7 @@ async function main() {
   const path = `${dataRoot("live")}/beary/notion/near.json`;
   writeJson(path, snap);
   log.info("notion snapshot written", { path, hits: snap.hits.length, scanned: snap.counts.scanned_pages });
-  process.stdout.write(`beary:notion OK · ${snap.hits.length} filas NEAR · ${snap.counts.scanned_pages} páginas leídas\n`);
+  process.stdout.write(`beary:notion OK · ${snap.hits.length} NEAR rows · ${snap.counts.scanned_pages} pages read\n`);
 }
 
 main().catch((err: unknown) => {

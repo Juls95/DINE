@@ -16,8 +16,8 @@ export type Violation = { check: string; detail: string };
 
 export function modeBanner(mode: "mock" | "live"): string {
   return mode === "mock"
-    ? "> **DATOS SIMULADOS.** Este documento se generó con el escenario mock: ninguna cifra describe a NEAR. Sirve solo para revisar el formato y la lógica del pipeline."
-    : "> Datos reales. Reproducible con `pnpm bul:build` desde los archivos en `data/`.";
+    ? "> **SIMULATED DATA.** This document was generated from the mock scenario: no figure describes NEAR. It only exercises the format and the logic of the pipeline."
+    : "> Real data. Reproducible with `pnpm bul:build` from the files in `data/`.";
 }
 
 /** The "never invent numbers" gate for the thesis and every chart sentence. */
@@ -25,21 +25,21 @@ export function verifyArtifacts(template: string, ctx: RenderContext, charts: re
   const violations: Violation[] = [];
   const check = (name: string, text: string) => {
     try {
-      for (const d of strayDigits(render(text, ctx, true))) violations.push({ check: `${name}: número fuera de placeholder`, detail: d });
+      for (const d of strayDigits(render(text, ctx, true))) violations.push({ check: `${name}: number outside a placeholder`, detail: d });
     } catch (err) {
-      if (err instanceof MissingPlaceholderError) violations.push({ check: `${name}: placeholder inválido`, detail: err.message });
+      if (err instanceof MissingPlaceholderError) violations.push({ check: `${name}: invalid placeholder`, detail: err.message });
       else throw err;
     }
   };
   check("THESIS", template);
   for (const c of charts) {
-    if (!c.sentence.trim()) violations.push({ check: `chart ${c.id}`, detail: "sin frase descriptiva" });
-    if (!c.query_file && !c.endpoint) violations.push({ check: `chart ${c.id}`, detail: "sin query ni endpoint" });
-    if (c.query_file && !existsSync(c.query_file)) violations.push({ check: `chart ${c.id}`, detail: `no existe ${c.query_file}` });
+    if (!c.sentence.trim()) violations.push({ check: `chart ${c.id}`, detail: "missing plain sentence" });
+    if (!c.query_file && !c.endpoint) violations.push({ check: `chart ${c.id}`, detail: "missing query and endpoint" });
+    if (c.query_file && !existsSync(c.query_file)) violations.push({ check: `chart ${c.id}`, detail: `${c.query_file} does not exist` });
     check(`chart ${c.id}`, c.sentence);
   }
   for (const m of Object.values(ctx.metrics)) {
-    if (m.value !== null && !Number.isFinite(m.value)) violations.push({ check: `metric ${m.id}`, detail: "valor no finito" });
+    if (m.value !== null && !Number.isFinite(m.value)) violations.push({ check: `metric ${m.id}`, detail: "non-finite value" });
   }
   return violations;
 }

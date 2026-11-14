@@ -6,12 +6,12 @@ export function ThesisPage({ bundle }: { bundle: Bundle }) {
     <article className="page thesis">
       <div className="verdict">
         <div>
-          <span className="eyebrow">Estado de la hipótesis</span>
-          <strong>{bundle.hypothesis_verdict ?? "sin datos"}</strong>
+          <span className="eyebrow">Hypothesis status</span>
+          <strong>{bundle.hypothesis_verdict ?? "no data"}</strong>
         </div>
         <div>
-          <span className="eyebrow">Régimen de adopción</span>
-          <strong>{bundle.regime ?? "sin datos"}</strong>
+          <span className="eyebrow">Adoption regime</span>
+          <strong>{bundle.regime ?? "no data"}</strong>
         </div>
       </div>
       <Markdown source={bundle.thesis_md} />

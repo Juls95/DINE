@@ -10,23 +10,26 @@ export type RenderContext = {
 const PLACEHOLDER = /\{\{(metric|param|label|block):([a-zA-Z0-9_]+)\}\}/g;
 export const SENTINEL = "§";
 
-const intFmt = new Intl.NumberFormat("es-MX", { maximumFractionDigits: 0 });
-const dec1 = new Intl.NumberFormat("es-MX", { maximumFractionDigits: 1, minimumFractionDigits: 1 });
-const dec2 = new Intl.NumberFormat("es-MX", { maximumFractionDigits: 2, minimumFractionDigits: 2 });
-const usdFmt = new Intl.NumberFormat("es-MX", { style: "currency", currency: "USD", maximumFractionDigits: 0 });
+const intFmt = new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 });
+const dec1 = new Intl.NumberFormat("en-US", { maximumFractionDigits: 1, minimumFractionDigits: 1 });
+const dec2 = new Intl.NumberFormat("en-US", { maximumFractionDigits: 2, minimumFractionDigits: 2 });
+const usdFmt = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 });
+const usd2Fmt = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 2, minimumFractionDigits: 2 });
 const signed = (s: string, n: number) => (n > 0 ? `+${s}` : s);
 
 export function formatMetric(m: Metric): string {
   const v = m.value;
-  if (v === null) return "no disponible";
+  if (v === null) return "not available";
   switch (m.unit) {
     case "count": return intFmt.format(v);
-    case "pct": return `${dec1.format(v)} %`;
+    case "pct": return `${dec1.format(v)}%`;
     case "pp": return `${signed(dec1.format(v), v)} pp`;
     case "usd": return usdFmt.format(v);
+    case "usd2": return usd2Fmt.format(v);
     case "corr": return dec2.format(v);
-    case "days": return `${intFmt.format(v)} ${v === 1 ? "día" : "días"}`;
+    case "days": return `${intFmt.format(v)} ${v === 1 ? "day" : "days"}`;
     case "index": return signed(dec2.format(v), v);
+    case "ratio": return dec2.format(v);
   }
 }
 

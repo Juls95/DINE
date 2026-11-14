@@ -18,7 +18,7 @@ export class ErrorBoundary extends Component<Props, State> {
     if (this.state.error) {
       return (
         <div className="error-box" role="alert">
-          <strong>{this.props.label}: no se pudo mostrar.</strong>
+          <strong>{this.props.label}: could not be displayed.</strong>
           <span>{this.state.error.message}</span>
         </div>
       );

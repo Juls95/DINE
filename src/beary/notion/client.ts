@@ -44,6 +44,7 @@ export function nearFilter(properties: readonly { name: string; type: "title" | 
   return { or: properties.map((p) => richContains(p.name, p.type, "NEAR")) };
 }
 
+// Notion column names are defined by the workspace (Spanish in two of the tables); they are an external schema, so they are not translated.
 export const TICKERS_FILTER = nearFilter([
   { name: "Ticker", type: "title" },
   { name: "LastNews", type: "rich_text" },

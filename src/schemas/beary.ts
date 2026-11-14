@@ -76,12 +76,15 @@ export type BearyWeekly = z.infer<typeof BearyWeekly>;
 export const NotionSource = z.enum(["tickers_info", "x_creative_output", "x_account_analyses"]);
 export type NotionSource = z.infer<typeof NotionSource>;
 
+export const NotionSentiment = z.enum(["positive", "neutral", "negative", "mixed"]);
+export type NotionSentiment = z.infer<typeof NotionSentiment>;
+
 export const BearyNotionHit = z.object({
   source: NotionSource,
   page_id: z.string().min(1),
   title: z.string(),
   date: IsoDate.nullable(),
-  sentiment: z.string().nullable(),
+  sentiment: NotionSentiment.nullable(),
   account: z.string().nullable(),
   topic: z.string().nullable(),
   excerpt: z.string().max(800),
@@ -113,10 +116,10 @@ export const BearyNotionSnapshot = z.object({
     discarded_false_positives: z.number().int().nonnegative(),
   }),
   sentiment_tally: z.object({
-    Positivo: z.number().int().nonnegative(),
-    Neutral: z.number().int().nonnegative(),
-    Negativo: z.number().int().nonnegative(),
-    Mixto: z.number().int().nonnegative(),
+    positive: z.number().int().nonnegative(),
+    neutral: z.number().int().nonnegative(),
+    negative: z.number().int().nonnegative(),
+    mixed: z.number().int().nonnegative(),
   }),
   themes: z.array(BearyNotionTheme),
   paragraphs: z.array(z.string()),

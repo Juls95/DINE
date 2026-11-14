@@ -1,7 +1,7 @@
 import type { ExtractedPost, HandleTier, ScoredPost } from "../schemas/beary";
 
 /**
- * Pre-registered credibility parameters. They are published on /metodologia and must not be tuned
+ * Pre-registered credibility parameters. They are published on /methodology and must not be tuned
  * after looking at results; changing them requires a changelog entry in THESIS.md.
  */
 export const SCORING = {

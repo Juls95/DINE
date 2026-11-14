@@ -9,20 +9,20 @@ import { verdictCopy } from "./lib/verdict";
 jest.mock("vega-embed", () => ({ __esModule: true, default: jest.fn().mockResolvedValue({ finalize: jest.fn() }) }));
 
 const agent = (id: "beary" | "bison" | "bul", status: "pass" | "warn" | "fail" = "pass") => ({
-  id, name: id[0]?.toUpperCase() + id.slice(1), role: `rol de ${id}`, does: ["hace algo"], inputs: ["entrada"], outputs: ["salida"],
-  runs: [{ at: "2026-11-09", summary: "corrida", details: { filas: 3 } }],
-  validations: [{ name: "check", status, detail: "detalle" }],
+  id, name: id[0]?.toUpperCase() + id.slice(1), role: `role of ${id}`, does: ["does something"], inputs: ["input"], outputs: ["output"],
+  runs: [{ at: "2026-11-09", summary: "run", details: { rows: 3 } }],
+  validations: [{ name: "check", status, detail: "detail" }],
 });
 
 const bundle: Bundle = {
   mode: "mock",
   generated_at: "2026-11-09T06:00:00.000Z",
-  thesis_md: "# Tesis\n\n## 1. Afirmación\n\nTexto **clave**.",
-  hypothesis_verdict: "respaldada",
-  regime: "expansión",
+  thesis_md: "# Thesis\n\n## 1. Claim\n\nKey **text**.",
+  hypothesis_verdict: "supported by current data",
+  regime: "expansion",
   metrics: {},
-  charts: [{ id: "daa", title: "Cuentas activas", agent: "bison", query_file: "q.sql", endpoint: null, query_sql: "SELECT 1", sentence: "Frase simple.", spec: {} }],
-  divergences: [{ week: "2026-W44", from: "2026-10-26", reconstructed: true, sentiment_index: 0.7, sentiment_delta: 0.5, onchain_change_pct: -8, quadrant: "espejismo" }],
+  charts: [{ id: "daa", title: "Daily active accounts", agent: "bison", query_file: "q.sql", endpoint: null, query_sql: "SELECT 1", sentence: "Plain sentence.", spec: {} }],
+  divergences: [{ week: "2026-W44", from: "2026-10-26", reconstructed: true, sentiment_index: 0.7, sentiment_delta: 0.5, onchain_change_pct: -8, quadrant: "mirage" }],
   spikes: [],
   beary: { weeks: [], latest_posts: [], discard_reasons: { not_in_citations: 2 }, notion: null },
   agents: [agent("beary", "warn"), agent("bison"), agent("bul")],
@@ -35,49 +35,49 @@ describe("site", () => {
 
   it("shows the simulated-data banner only in mock mode", () => {
     const { rerender } = render(<MockBanner mode="mock" />);
-    expect(screen.getByRole("status")).toHaveTextContent("DATOS SIMULADOS");
+    expect(screen.getByRole("status")).toHaveTextContent("SIMULATED DATA");
     rerender(<MockBanner mode="live" />);
     expect(screen.queryByRole("status")).toBeNull();
   });
 
   it("landing states the thesis verdict and the reasoning of each bot", () => {
     render(<Page route="/" bundle={bundle} />);
-    expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent(/tesis se sostiene/i);
-    fireEvent.click(screen.getByRole("button", { name: /respaldar/i }));
-    expect(screen.getByRole("button", { name: /respaldar/i })).toHaveAttribute("aria-pressed", "true");
-    fireEvent.click(screen.getByRole("button", { name: /comentar/i }));
-    fireEvent.change(screen.getByLabelText(/comentario/i), { target: { value: "¿y las validaciones?" } });
-    fireEvent.click(screen.getByRole("button", { name: /publicar/i }));
-    expect(screen.getByText("¿y las validaciones?")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent(/thesis holds/i);
+    fireEvent.click(screen.getByRole("button", { name: /back/i }));
+    expect(screen.getByRole("button", { name: /back/i })).toHaveAttribute("aria-pressed", "true");
+    fireEvent.click(screen.getByRole("button", { name: /comment/i }));
+    fireEvent.change(screen.getByLabelText(/comment/i), { target: { value: "what about the validations?" } });
+    fireEvent.click(screen.getByRole("button", { name: /post/i }));
+    expect(screen.getByText("what about the validations?")).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Beary" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Bison" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Bul" })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: /expediente de Beary/i })).toHaveAttribute("href", "#/agentes/beary");
-    expect(screen.getAllByText("hace algo")).toHaveLength(3);
-    expect(screen.getByText(/i · el problema/i)).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: /una tesis, trazada/i })).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: /cada veredicto queda público/i })).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: /leer la tesis/i })).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: /auditar a un pensador/i })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /Beary's file/i })).toHaveAttribute("href", "#/agents/beary");
+    expect(screen.getAllByText("does something")).toHaveLength(3);
+    expect(screen.getByText(/i · the problem/i)).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /one thesis, traced/i })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /every verdict is public/i })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /read the thesis/i })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /audit a thinker/i })).toBeInTheDocument();
   });
 
-  it("verdictCopy never treats 'no respaldada' as a pass", () => {
-    expect(verdictCopy("no respaldada por los datos actuales", "contracción").title).toMatch(/no se sostiene/i);
-    expect(verdictCopy("respaldada", "expansión").title).toMatch(/se sostiene\./i);
-    expect(verdictCopy("parcialmente respaldada", "lateral").title).toMatch(/a medias/i);
+  it("verdictCopy never treats 'not supported' as a pass", () => {
+    expect(verdictCopy("not supported by current data", "contraction").title).toMatch(/does not hold/i);
+    expect(verdictCopy("supported by current data", "expansion").title).toMatch(/holds\./i);
+    expect(verdictCopy("partially supported", "sideways").title).toMatch(/in part/i);
   });
 
-  it("Ágora evaluates each agent separately and shows the debate table", () => {
+  it("Agora evaluates each agent separately and shows the debate table", () => {
     render(<Page route="/agora" bundle={bundle} />);
     expect(screen.getAllByRole("link")).toHaveLength(3);
-    expect(screen.getByText("Atención")).toBeInTheDocument();
-    expect(screen.getByRole("cell", { name: "espejismo" })).toBeInTheDocument();
+    expect(screen.getByText("Warning")).toBeInTheDocument();
+    expect(screen.getByRole("cell", { name: "mirage" })).toBeInTheDocument();
   });
 
   it("agent page lists inputs, outputs and validations", () => {
-    render(<Page route="/agentes/bison" bundle={bundle} />);
+    render(<Page route="/agents/bison" bundle={bundle} />);
     expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent("Bison");
-    expect(screen.getByText("entrada")).toBeInTheDocument();
+    expect(screen.getByText("input")).toBeInTheDocument();
     expect(screen.getByText("Query: q.sql")).toBeInTheDocument();
   });
 
@@ -96,9 +96,9 @@ describe("site", () => {
             x_account_analyses: "bbaf87b8-dfa1-4cce-acb3-f4f69a0c383d",
           },
           counts: { tickers: 1, creative: 0, analyses: 0, scanned_pages: 3, discarded_false_positives: 1 },
-          sentiment_tally: { Positivo: 0, Neutral: 0, Negativo: 0, Mixto: 0 },
+          sentiment_tally: { positive: 0, neutral: 0, negative: 0, mixed: 0 },
           themes: [{ id: "intents_security", title: "NEAR Intents / Omni", evidence_count: 1, summary: "Omni exploit ~$3.8M" }],
-          paragraphs: ["Beary leyó TickersInfo buscando NEAR."],
+          paragraphs: ["Beary read TickersInfo looking for NEAR."],
           hits: [{
             source: "tickers_info", page_id: "1", title: "NEAR Intents", date: "2026-10-02",
             sentiment: null, account: "Julian", topic: "crypto", excerpt: "Omni exploit ~$3.8M", url: null,
@@ -107,42 +107,42 @@ describe("site", () => {
       },
     };
     render(<Page route="/social" bundle={withNotion} />);
-    expect(screen.getByRole("heading", { name: /expediente notion/i })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /notion dossier/i })).toBeInTheDocument();
     expect(screen.getByRole("cell", { name: "NEAR Intents" })).toBeInTheDocument();
     expect(screen.getAllByText(/Omni exploit/).length).toBeGreaterThan(0);
   });
 
   it("dashboard pairs every chart with its sentence and query", () => {
     render(<Page route="/dashboard" bundle={bundle} />);
-    expect(screen.getByText("Frase simple.")).toBeInTheDocument();
+    expect(screen.getByText("Plain sentence.")).toBeInTheDocument();
     expect(screen.getByText("SELECT 1")).toBeInTheDocument();
   });
 
   it("App surfaces a load error instead of a blank page", async () => {
-    render(<App load={() => Promise.reject(new Error("sin bundle"))} />);
-    expect(await screen.findByRole("alert")).toHaveTextContent("sin bundle");
+    render(<App load={() => Promise.reject(new Error("no bundle"))} />);
+    expect(await screen.findByRole("alert")).toHaveTextContent("no bundle");
   });
 
   it("ErrorBoundary isolates a broken section", () => {
     const Boom = () => {
-      throw new Error("falló");
+      throw new Error("failed");
     };
     jest.spyOn(console, "error").mockImplementation(() => undefined);
-    render(<ErrorBoundary label="Gráfico"><Boom /></ErrorBoundary>);
-    expect(screen.getByRole("alert")).toHaveTextContent("Gráfico: no se pudo mostrar.");
+    render(<ErrorBoundary label="Chart"><Boom /></ErrorBoundary>);
+    expect(screen.getByRole("alert")).toHaveTextContent("Chart: could not be displayed.");
   });
 
   it("parseBundle fails fast on an incompatible bundle", () => {
-    expect(() => parseBundle({ mode: "mock" })).toThrow(/bundle.json inválido/);
+    expect(() => parseBundle({ mode: "mock" })).toThrow(/Invalid bundle.json/);
     expect(parseBundle(bundle).mode).toBe("mock");
   });
 });
 
 describe("Markdown", () => {
   it("renders tables, lists and bold", () => {
-    render(<Markdown source={"- **uno**\n- dos\n\n| A | B |\n| --- | --- |\n| x | y |"} />);
+    render(<Markdown source={"- **one**\n- two\n\n| A | B |\n| --- | --- |\n| x | y |"} />);
     expect(screen.getByRole("table")).toBeInTheDocument();
     expect(screen.getAllByRole("listitem")).toHaveLength(2);
-    expect(screen.getByText("uno").tagName).toBe("STRONG");
+    expect(screen.getByText("one").tagName).toBe("STRONG");
   });
 });

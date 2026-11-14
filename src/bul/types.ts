@@ -1,6 +1,9 @@
 import type { DataMode } from "../schemas/common";
 
-export type MetricUnit = "count" | "pct" | "pp" | "usd" | "corr" | "days" | "index";
+export type MetricUnit = "count" | "pct" | "pp" | "usd" | "usd2" | "corr" | "days" | "index" | "ratio";
+
+/** Where a number comes from. Shown next to every figure so readers know what they can verify. */
+export type Provenance = "computed" | "simulated" | "desk" | "cited";
 
 export type Metric = {
   id: string;
@@ -8,12 +11,13 @@ export type Metric = {
   value: number | null;
   unit: MetricUnit;
   source: string;
+  provenance?: Provenance;
   note?: string;
 };
 
 export type Label = { id: string; value: string };
 
-export type SpikeEvent = { date: string; multiple: number; top10_share_pct: number; classification: "pico" | "cambio_estructural" };
+export type SpikeEvent = { date: string; multiple: number; top10_share_pct: number; classification: "spike" | "structural_change" };
 
 export type Divergence = {
   week: string;
@@ -22,7 +26,7 @@ export type Divergence = {
   sentiment_index: number | null;
   sentiment_delta: number | null;
   onchain_change_pct: number | null;
-  quadrant: "confirmación" | "espejismo" | "oportunidad no narrada" | "deterioro confirmado" | "neutral" | "sin datos";
+  quadrant: "confirmation" | "mirage" | "unnarrated opportunity" | "confirmed deterioration" | "neutral" | "no data";
 };
 
 export type LagPoint = { lag: number; forward: number | null; reverse: number | null; n: number };

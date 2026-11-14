@@ -16,114 +16,114 @@ export function AgoraFlow({ bundle }: { bundle: Bundle }) {
   const bisonRun = bison?.runs[0];
   const bulRun = bul?.runs[0];
   const fails = bundle.agents.flatMap((a) => a.validations).filter((v) => v.status === "fail").length;
-  const slash = [...bundle.divergences].reverse().find((d) => d.quadrant === "espejismo");
-  const mirages = bundle.divergences.filter((d) => d.quadrant === "espejismo").length;
+  const slash = [...bundle.divergences].reverse().find((d) => d.quadrant === "mirage");
+  const mirages = bundle.divergences.filter((d) => d.quadrant === "mirage").length;
   const reconstructed = bundle.divergences.filter((d) => d.reconstructed).length;
 
   const quote = {
-    tesis: "desplazamiento a 1Click Swap sobre Intents",
-    beary: bearyRun?.summary ?? "sin corrida",
-    bison: bisonRun?.summary ?? "sin corrida",
-    modo: bundle.mode,
+    thesis: "shift to 1Click Swap on Intents",
+    beary: bearyRun?.summary ?? "no run",
+    bison: bisonRun?.summary ?? "no run",
+    mode: bundle.mode,
   };
   const verifyPayload = {
-    cifras_a_mano: fails ? "fail" : "pass",
-    validaciones_fail: fails,
-    hipotesis: bundle.hypothesis_verdict,
-    regimen: bundle.regime,
+    hand_written_figures: fails ? "fail" : "pass",
+    failed_validations: fails,
+    hypothesis: bundle.hypothesis_verdict,
+    regime: bundle.regime,
   };
 
   return (
     <>
       <section className="flow-block" id="problema">
-        <p className="roman">I · El problema</p>
+        <p className="roman">I · The problem</p>
         <ol className="problem-list">
-          <li><em>α.</em> Una cifra en X no es un dato — si xAI no la citó, Beary la descarta.</li>
-          <li><em>β.</em> El output no se verifica solo — Bison tiene que traer query, <code>block_date</code> y tope de bytes.</li>
-          <li><em>γ.</em> Un rally sin on-chain no mueve la tesis. El espejismo no se publica como adopción.</li>
+          <li><em>α.</em> A figure on X is not data — if xAI did not cite it, Beary discards it.</li>
+          <li><em>β.</em> Output does not verify itself — Bison must bring the query, <code>block_date</code> and a byte cap.</li>
+          <li><em>γ.</em> A rally without on-chain activity does not move the thesis. A mirage is not published as adoption.</li>
         </ol>
-        <p className="flow-coda">En el ágora, una tesis sin evidencia era ruido. Beary, Bison y Bul firman por separado: entradas, salidas y validaciones.</p>
+        <p className="flow-coda">In the agora, a thesis without evidence was noise. Beary, Bison and Bul sign separately: inputs, outputs and validations.</p>
       </section>
 
       <section className="flow-block" id="follow">
-        <p className="roman">II · Seguir un expediente</p>
-        <h2>Una tesis, trazada en el libro.</h2>
-        <p className="lede">Cada paso de abajo sale de <code>data/</code> o de <code>THESIS.md</code>. Nada se escribe a mano.</p>
+        <p className="roman">II · Follow a file</p>
+        <h2>One thesis, traced in the ledger.</h2>
+        <p className="lede">Every step below comes from <code>data/</code> or <code>THESIS.md</code>. Nothing is written by hand.</p>
 
         <ol className="trace">
           <li className="trace-card">
             <header>
-              <strong>Beary · lectura</strong>
+              <strong>Beary · reading</strong>
               <span>xAI · x_search</span>
             </header>
             <pre>{JSON.stringify(quote, null, 2)}</pre>
-            <p>Beary precifica su propia certeza: si el post no está citado, fuera de lista o de otra fecha, no entra.</p>
+            <p>Beary prices its own certainty: if a post is uncited, off the list or from another date, it does not get in.</p>
           </li>
           <li className="trace-card">
             <header>
-              <strong>Bison · cadena</strong>
+              <strong>Bison · chain</strong>
               <span>BigQuery · 1Click</span>
             </header>
             <p className="trace-line">
-              {bisonRun ? bisonRun.summary : "sin corrida"} · filtro <code>block_date</code>
+              {bisonRun ? bisonRun.summary : "no run"} · filter <code>block_date</code>
             </p>
-            <p>Dry run antes de cada query. Intents Explorer, solo SUCCESS, una solicitud cada cinco segundos.</p>
+            <p>A dry run before every query. Intents Explorer, SUCCESS only, one request every five seconds.</p>
           </li>
           <li className="trace-card">
             <header>
-              <strong>Bul · cruce</strong>
-              <span>métricas puras</span>
+              <strong>Bul · crossing</strong>
+              <span>pure metrics</span>
             </header>
             <p className="trace-line">
-              {bulRun ? bulRun.summary : "sin corrida"} · hipótesis {bundle.hypothesis_verdict ?? "—"}
+              {bulRun ? bulRun.summary : "no run"} · hypothesis {bundle.hypothesis_verdict ?? "—"}
             </p>
-            <p>Cruza el sentimiento de Beary con las cuentas activas de Bison. Un espejismo no mueve la tesis.</p>
+            <p>Crosses Beary's sentiment with Bison's active accounts. A mirage does not move the thesis.</p>
           </li>
           <li className="trace-card">
             <header>
-              <strong>Verify · veredicto</strong>
+              <strong>Verify · verdict</strong>
               <span>pnpm verify</span>
             </header>
             <p className="trace-line">
-              {fails} fallos de validación{" "}
-              <Stamp kind={fails ? "fail" : "ok"}>{fails ? "FALLA" : "VALIDADA"}</Stamp>
+              {fails} validation failures{" "}
+              <Stamp kind={fails ? "fail" : "ok"}>{fails ? "FAILED" : "VALIDATED"}</Stamp>
             </p>
             <pre>{JSON.stringify(verifyPayload, null, 2)}</pre>
-            <p>Un validador ciego: si queda un dígito suelto en la tesis, no se publica.</p>
+            <p>A blind validator: if a stray digit is left in the thesis, it is not published.</p>
           </li>
           <li className="trace-card">
             <header>
-              <strong>Publicar · tesis</strong>
+              <strong>Publish · thesis</strong>
               <span>{bundle.generated_at.slice(0, 10)}</span>
             </header>
             <p className="trace-line">
-              THESIS.md + sitio{" "}
-              <Stamp kind="ok">PUBLICADA</Stamp>
+              THESIS.md + site{" "}
+              <Stamp kind="ok">PUBLISHED</Stamp>
             </p>
-            <p>Pasa: las cifras salen de <code>metrics.json</code> y el libro cierra limpio.</p>
+            <p>Passes: the figures come from <code>metrics.json</code> and the ledger closes clean.</p>
           </li>
         </ol>
 
-        <p className="flow-aside">— y el final que mantiene a todos honestos —</p>
+        <p className="flow-aside">— and the ending that keeps everyone honest —</p>
         <div className="slash-card">
           <div className="slash-mark" aria-hidden="true">✕</div>
           <div>
-            <p className="ledger-kicker">semana · cuadrante · origen</p>
+            <p className="ledger-kicker">week · quadrant · origin</p>
             {slash ? (
               <p className="trace-line">
-                {slash.week} · {slash.quadrant} · {slash.reconstructed ? "reconstruida" : "en vivo"}{" "}
-                <Stamp kind="fail">ESPEJISMO</Stamp>
+                {slash.week} · {slash.quadrant} · {slash.reconstructed ? "reconstructed" : "live"}{" "}
+                <Stamp kind="fail">MIRAGE</Stamp>
               </p>
             ) : (
-              <p className="trace-line">Ninguna semana marcada como espejismo en este bundle.</p>
+              <p className="trace-line">No week is flagged as a mirage in this bundle.</p>
             )}
-            <p>Sentimiento que sube sin actividad on-chain no se cobra como tesis. → el lector no paga el invento.</p>
+            <p>Sentiment that rises without on-chain activity is not billed as thesis. → the reader does not pay for the invention.</p>
           </div>
         </div>
-        <p className="flow-coda">Una tesis que responde por su trabajo — en evidencia, no en disculpas.</p>
+        <p className="flow-coda">A thesis that answers for its work — in evidence, not in excuses.</p>
 
-        <h2 className="flow-sub">Los tres que firman</h2>
-        <p className="lede">Cada bot se evalúa solo: qué aportó, cómo razonó y si pasó sus validaciones.</p>
+        <h2 className="flow-sub">The three who sign</h2>
+        <p className="lede">Each bot is evaluated alone: what it contributed, how it reasoned and whether it passed its validations.</p>
         <div className="ledger">
           {bundle.agents.map((a) => (
             <BotLedger key={a.id} agent={a} bundle={bundle} />
@@ -132,18 +132,18 @@ export function AgoraFlow({ bundle }: { bundle: Bundle }) {
       </section>
 
       <section className="flow-block" id="agora-publica">
-        <p className="roman">III · El ágora</p>
-        <h2>Cada veredicto queda público.</h2>
-        <p className="lede">El cruce semanal de Beary contra Bison está en la mesa. El validador no mira quién lo pidió.</p>
+        <p className="roman">III · The agora</p>
+        <h2>Every verdict is public.</h2>
+        <p className="lede">Beary's weekly crossing against Bison is on the table. The validator does not look at who asked.</p>
         <div className="table-wrap">
           <table>
             <thead>
               <tr>
-                <th>Semana</th>
-                <th>Sentimiento</th>
+                <th>Week</th>
+                <th>Sentiment</th>
                 <th>On-chain</th>
-                <th>Veredicto</th>
-                <th>Origen</th>
+                <th>Verdict</th>
+                <th>Origin</th>
               </tr>
             </thead>
             <tbody>
@@ -153,33 +153,33 @@ export function AgoraFlow({ bundle }: { bundle: Bundle }) {
                   <td>{fmtIdx(d.sentiment_index)}</td>
                   <td>{fmtPct(d.onchain_change_pct)}</td>
                   <td>{d.quadrant}</td>
-                  <td>{d.reconstructed ? "reconstruida" : "en vivo"}</td>
+                  <td>{d.reconstructed ? "reconstructed" : "live"}</td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
         <p className="muted">
-          {bundle.divergences.length} semanas · {mirages} espejismos · {reconstructed} reconstruidas
+          {bundle.divergences.length} weeks · {mirages} mirages · {reconstructed} reconstructed
         </p>
       </section>
 
       <section className="flow-block" id="entrar">
-        <p className="roman">IV · Entrar al ágora</p>
+        <p className="roman">IV · Enter the agora</p>
         <div className="enter-grid">
           <article className="enter-card">
-            <h3>Leer la tesis</h3>
-            <p>El veredicto, los pilares, qué la invalidaría. Toda cifra sale de un placeholder.</p>
-            <a className="cta" href="#/tesis">Leer la tesis</a>
+            <h3>Read the thesis</h3>
+            <p>The verdict, the pillars, what would invalidate it. Every figure comes from a placeholder.</p>
+            <a className="cta" href="#/thesis">Read the thesis</a>
           </article>
           <article className="enter-card">
-            <h3>Auditar a un pensador</h3>
-            <p>Un comando reconstruye tesis, gráficos y este sitio. El expediente de cada agente es público.</p>
+            <h3>Audit a thinker</h3>
+            <p>One command rebuilds the thesis, the charts and this site. Each agent's file is public.</p>
             <pre>{`pnpm refresh && pnpm bul:build`}</pre>
-            <a className="cta cta-ghost" href="#/dashboard">Ver el dashboard</a>
+            <a className="cta cta-ghost" href="#/dashboard">See the dashboard</a>
           </article>
         </div>
-        <p className="flow-coda">Ágora — la capa de evidencia de la tesis.</p>
+        <p className="flow-coda">Agora — the evidence layer of the thesis.</p>
       </section>
     </>
   );

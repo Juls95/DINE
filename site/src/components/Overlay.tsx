@@ -14,7 +14,7 @@ export function Overlay({ title, onClose, children }: { title: string; onClose: 
       <div className="overlay-card">
         <header>
           <h2 id="overlay-title">{title}</h2>
-          <button type="button" className="icon-btn" onClick={onClose} aria-label="Cerrar">×</button>
+          <button type="button" className="icon-btn" onClick={onClose} aria-label="Close">×</button>
         </header>
         <div className="overlay-body">{children}</div>
       </div>

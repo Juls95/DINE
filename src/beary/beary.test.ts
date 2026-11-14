@@ -9,7 +9,7 @@ const post = (over: Partial<ExtractedPost> = {}): ExtractedPost => ({
   handle: "alice",
   date: "2026-11-02",
   claim_type: "announcement",
-  paraphrase: "Anuncia una integración.",
+  paraphrase: "Announces an integration.",
   primary_source_url: null,
   contains_numeric_claim: false,
   sentiment: 0.5,

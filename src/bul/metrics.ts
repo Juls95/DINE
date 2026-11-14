@@ -2,10 +2,10 @@ import { addDays, weekStart } from "../lib/dates";
 import { PARAMS, SUCCESS_STATUS_PREFIX } from "./params";
 import { laggedCorrelation, logDiff, mean, median, movingAverage, pctChange, sum } from "./stats";
 import type { Inputs } from "./load";
-import type { Analysis, Divergence, LagPoint, Metric, SpikeEvent } from "./types";
+import type { Analysis, Divergence, LagPoint, Metric, Provenance, SpikeEvent } from "./types";
 
 const W = PARAMS.window_days;
-const round = (n: number | null, d = 4) => (n === null ? null : Math.round(n * 10 ** d) / 10 ** d);
+export const round = (n: number | null, d = 4) => (n === null ? null : Math.round(n * 10 ** d) / 10 ** d);
 
 /** Rows in [end - offset - W, end - offset). */
 function windowRows<T extends { date: string }>(rows: readonly T[], end: string, offset = 0): T[] {
@@ -34,7 +34,7 @@ export function classifySpikes(inputs: Inputs): SpikeEvent[] {
       date: row.date,
       multiple: round(multiple, 2) as number,
       top10_share_pct: round(top10, 1) as number,
-      classification: persisted && top10 < PARAMS.spike_concentration_pct ? "cambio_estructural" : "pico",
+      classification: persisted && top10 < PARAMS.spike_concentration_pct ? "structural_change" : "spike",
     });
   }
   return events;
@@ -69,16 +69,16 @@ export function divergences(inputs: Inputs): Divergence[] {
     const before = daaByWeek.get(addDays(w.from, -7)) ?? [];
     const onchain = cur.length === 7 && before.length === 7 ? pctChange(mean(cur), mean(before)) : null;
     const sDelta = w.sentiment_index !== null && prev?.sentiment_index != null ? w.sentiment_index - prev.sentiment_index : null;
-    let quadrant: Divergence["quadrant"] = "sin datos";
+    let quadrant: Divergence["quadrant"] = "no data";
     if (onchain !== null && sDelta !== null) {
       const up = onchain > PARAMS.divergence_onchain_band_pct;
       const down = onchain < -PARAMS.divergence_onchain_band_pct;
       const sUp = sDelta > PARAMS.divergence_sentiment_band;
       const sDown = sDelta < -PARAMS.divergence_sentiment_band;
-      if (sUp && up) quadrant = "confirmación";
-      else if (sUp) quadrant = "espejismo";
-      else if (sDown && up) quadrant = "oportunidad no narrada";
-      else if (sDown && down) quadrant = "deterioro confirmado";
+      if (sUp && up) quadrant = "confirmation";
+      else if (sUp) quadrant = "mirage";
+      else if (sDown && up) quadrant = "unnarrated opportunity";
+      else if (sDown && down) quadrant = "confirmed deterioration";
       else quadrant = "neutral";
     }
     return {
@@ -88,13 +88,22 @@ export function divergences(inputs: Inputs): Divergence[] {
   });
 }
 
+/** Collects metrics with a shared provenance rule: simulated pipeline inputs are never labelled "computed". */
+export function metricAdder(store: Record<string, Metric>, mode: Inputs["mode"]) {
+  return (id: string, label: string, value: number | null, unit: Metric["unit"], source: string, note?: string, provenance?: Provenance) => {
+    store[id] = {
+      id, label, value: round(value), unit, source,
+      provenance: provenance ?? (mode === "mock" ? "simulated" : "computed"),
+      ...(note ? { note } : {}),
+    };
+  };
+}
+
 export function analyze(inputs: Inputs, generatedAt: string): Analysis {
   const { bison, manifest } = inputs;
   const end = manifest.window.end;
   const m: Record<string, Metric> = {};
-  const add = (id: string, label: string, value: number | null, unit: Metric["unit"], source: string, note?: string) => {
-    m[id] = { id, label, value: round(value), unit, source, ...(note ? { note } : {}) };
-  };
+  const add = metricAdder(m, inputs.mode);
   const BQ = "BigQuery crypto_near_mainnet_us";
   const IE = "Intents Explorer (1Click Swap)";
 
@@ -102,26 +111,26 @@ export function analyze(inputs: Inputs, generatedAt: string): Analysis {
   const daa30 = median(daa(0));
   const daaPrev = median(daa(W));
   const daa90 = median(bison.daily_activity.filter((r) => r.date >= addDays(end, -90)).map((r) => r.daily_active_accounts));
-  add("daa_median_30d", "Mediana de cuentas activas diarias (últimos 30 días)", daa30, "count", `${BQ} · transactions`);
-  add("daa_median_prev_30d", "Mediana de cuentas activas diarias (30 días previos)", daaPrev, "count", `${BQ} · transactions`);
-  add("daa_median_90d", "Mediana de cuentas activas diarias (90 días)", daa90, "count", `${BQ} · transactions`);
-  add("daa_30d_change_pct", "Cambio de la mediana de cuentas activas vs 30 días previos", pctChange(daa30, daaPrev), "pct", `${BQ} · transactions`);
+  add("daa_median_30d", "Median daily active accounts (last 30 days)", daa30, "count", `${BQ} · transactions`);
+  add("daa_median_prev_30d", "Median daily active accounts (previous 30 days)", daaPrev, "count", `${BQ} · transactions`);
+  add("daa_median_90d", "Median daily active accounts (90 days)", daa90, "count", `${BQ} · transactions`);
+  add("daa_30d_change_pct", "Change in median active accounts vs previous 30 days", pctChange(daa30, daaPrev), "pct", `${BQ} · transactions`);
   const regimeGap = pctChange(daa30, daa90);
-  add("daa_30d_vs_90d_pct", "Mediana 30 días vs mediana 90 días", regimeGap, "pct", `${BQ} · transactions`);
+  add("daa_30d_vs_90d_pct", "30-day median vs 90-day median", regimeGap, "pct", `${BQ} · transactions`);
 
   const tx = (o: number) => windowRows(bison.daily_activity, end, o).map((r) => r.transactions);
-  add("tx_median_30d", "Mediana de transacciones diarias (30 días)", median(tx(0)), "count", `${BQ} · transactions`);
-  add("tx_30d_change_pct", "Cambio de la mediana de transacciones vs 30 días previos", pctChange(median(tx(0)), median(tx(W))), "pct", `${BQ} · transactions`);
+  add("tx_median_30d", "Median daily transactions (30 days)", median(tx(0)), "count", `${BQ} · transactions`);
+  add("tx_30d_change_pct", "Change in median transactions vs previous 30 days", pctChange(median(tx(0)), median(tx(W))), "pct", `${BQ} · transactions`);
 
   const status = windowRows(bison.tx_status, end);
   const ok = sum(status.filter((s) => s.status.toUpperCase().startsWith(SUCCESS_STATUS_PREFIX)).map((s) => s.transactions));
   const all = sum(status.map((s) => s.transactions));
-  add("success_rate_30d", "Transacciones exitosas (30 días)", all ? (ok / all) * 100 : null, "pct", `${BQ} · transactions.status`,
-    "El mapeo de estados a 'éxito' debe verificarse contra los valores reales de status.");
+  add("success_rate_30d", "Successful transactions (30 days)", all ? (ok / all) * 100 : null, "pct", `${BQ} · transactions.status`,
+    "The status-to-success mapping must be checked against the real values of status.");
 
   const acc = (o: number) => sum(windowRows(bison.new_accounts, end, o).map((r) => r.new_accounts));
-  add("new_accounts_30d", "Cuentas creadas (30 días)", acc(0), "count", `${BQ} · receipt_actions`);
-  add("new_accounts_30d_change_pct", "Cambio de cuentas creadas vs 30 días previos", pctChange(acc(0), acc(W)), "pct", `${BQ} · receipt_actions`);
+  add("new_accounts_30d", "Accounts created (30 days)", acc(0), "count", `${BQ} · receipt_actions`);
+  add("new_accounts_30d_change_pct", "Change in accounts created vs previous 30 days", pctChange(acc(0), acc(W)), "pct", `${BQ} · receipt_actions`);
 
   const ca = (o: number) => windowRows(bison.contract_activity, end, o);
   const share = (rows: ReturnType<typeof ca>) => {
@@ -130,79 +139,83 @@ export function analyze(inputs: Inputs, generatedAt: string): Analysis {
   };
   const share30 = share(ca(0));
   const sharePrev = share(ca(W));
-  add("active_contracts_median_30d", "Mediana de contratos activos por día (30 días)", median(ca(0).map((r) => r.active_contracts)), "count", `${BQ} · receipt_actions`);
-  add("deploys_30d", "Contratos desplegados (30 días)", sum(ca(0).map((r) => r.deploys)), "count", `${BQ} · receipt_actions`);
-  add("intents_call_share_30d", "Llamadas al contrato de Intents sobre el total de llamadas (30 días)", share30, "pct", `${BQ} · receipt_actions`);
-  add("intents_call_share_change_pp", "Cambio de esa participación vs 30 días previos", share30 !== null && sharePrev !== null ? share30 - sharePrev : null, "pp", `${BQ} · receipt_actions`);
+  add("active_contracts_median_30d", "Median active contracts per day (30 days)", median(ca(0).map((r) => r.active_contracts)), "count", `${BQ} · receipt_actions`);
+  add("deploys_30d", "Contracts deployed (30 days)", sum(ca(0).map((r) => r.deploys)), "count", `${BQ} · receipt_actions`);
+  add("intents_call_share_30d", "Intents contract share of all contract calls (30 days)", share30, "pct", `${BQ} · receipt_actions`);
+  add("intents_call_share_change_pp", "Change in that share vs previous 30 days", share30 !== null && sharePrev !== null ? share30 - sharePrev : null, "pp", `${BQ} · receipt_actions`);
 
   const conc = windowRows(bison.concentration, end).map((c) => (c.total_transactions ? (c.top10_transactions / c.total_transactions) * 100 : 0));
-  add("top10_share_median_30d", "Mediana de la participación de los diez signers más activos (30 días)", median(conc), "pct", `${BQ} · transactions`);
+  add("top10_share_median_30d", "Median share of transactions from the ten most active signers (30 days)", median(conc), "pct", `${BQ} · transactions`);
 
   const meta = windowRows(bison.meta_tx, end);
   const metaActions = sum(meta.map((r) => r.total_actions));
-  add("meta_tx_share_30d", "Acciones delegadas (meta-transacciones) sobre el total (30 días)", metaActions ? (sum(meta.map((r) => r.delegate_actions)) / metaActions) * 100 : null, "pct", `${BQ} · receipt_actions`);
-  add("delegating_accounts_median_30d", "Mediana de cuentas que usan meta-transacciones por día", median(meta.map((r) => r.delegating_accounts)), "count", `${BQ} · receipt_actions`);
+  add("meta_tx_share_30d", "Delegated actions (meta-transactions) share of all actions (30 days)", metaActions ? (sum(meta.map((r) => r.delegate_actions)) / metaActions) * 100 : null, "pct", `${BQ} · receipt_actions`);
+  add("delegating_accounts_median_30d", "Median accounts using meta-transactions per day", median(meta.map((r) => r.delegating_accounts)), "count", `${BQ} · receipt_actions`);
 
   const ie = (o: number) => windowRows(bison.intents_daily, end, o);
   const vol30 = sum(ie(0).map((r) => r.volume_usd));
   const volPrev = sum(ie(W).map((r) => r.volume_usd));
   const swaps30 = sum(ie(0).map((r) => r.swaps));
-  add("intents_volume_30d_usd", "Volumen de 1Click Swap (30 días)", ie(0).length ? vol30 : null, "usd", IE);
-  add("intents_volume_30d_change_pct", "Cambio del volumen de 1Click vs 30 días previos", ie(W).length ? pctChange(vol30, volPrev) : null, "pct", IE);
-  add("intents_swaps_30d", "Swaps de 1Click (30 días)", ie(0).length ? swaps30 : null, "count", IE);
-  add("intents_cross_chain_share_30d", "Swaps entre cadenas distintas (30 días, heurística por id de activo)", swaps30 ? (sum(ie(0).map((r) => r.cross_chain_swaps)) / swaps30) * 100 : null, "pct", IE);
-  add("intents_missing_usd_30d", "Swaps sin valor USD reportado (30 días)", ie(0).length ? sum(ie(0).map((r) => r.swaps_missing_usd)) : null, "count", IE);
+  add("intents_volume_30d_usd", "1Click Swap volume (30 days)", ie(0).length ? vol30 : null, "usd", IE);
+  add("intents_volume_30d_change_pct", "Change in 1Click volume vs previous 30 days", ie(W).length ? pctChange(vol30, volPrev) : null, "pct", IE);
+  add("intents_swaps_30d", "1Click swaps (30 days)", ie(0).length ? swaps30 : null, "count", IE);
+  add("intents_cross_chain_share_30d", "Swaps between different chains (30 days, heuristic on asset id)", swaps30 ? (sum(ie(0).map((r) => r.cross_chain_swaps)) / swaps30) * 100 : null, "pct", IE);
+  add("intents_missing_usd_30d", "Swaps without a reported USD value (30 days)", ie(0).length ? sum(ie(0).map((r) => r.swaps_missing_usd)) : null, "count", IE);
+
+  const swapsPer1k = daa30 && ie(0).length ? (swaps30 / (daa30 * W)) * 1000 : null;
+  add("swaps_per_1k_daa", "1Click swaps per thousand daily active accounts (30 days)", swapsPer1k, "ratio", `${IE} + ${BQ}`,
+    "An engagement-to-activity ratio, not a conversion rate: addresses are not joined.");
 
   const volChange = m.intents_volume_30d_change_pct?.value ?? null;
   const daaChange = m.daa_30d_change_pct?.value ?? null;
-  add("growth_gap_pp", "Crecimiento del volumen de 1Click menos crecimiento de cuentas activas", volChange !== null && daaChange !== null ? volChange - daaChange : null, "pp", `${IE} + ${BQ}`);
+  add("growth_gap_pp", "1Click volume growth minus active-account growth", volChange !== null && daaChange !== null ? volChange - daaChange : null, "pp", `${IE} + ${BQ}`);
 
   const lag = lagAnalysis(inputs);
   const best = lag.filter((p) => p.lag > 0 && p.forward !== null).sort((a, b) => (b.forward ?? 0) - (a.forward ?? 0))[0];
   const bestReverse = lag.filter((p) => p.lag > 0 && p.reverse !== null).sort((a, b) => (b.reverse ?? 0) - (a.reverse ?? 0))[0];
-  add("lag_best_days", "Rezago con mayor correlación (1Click → cuentas activas)", best?.lag ?? null, "days", `${IE} + ${BQ}`);
-  add("lag_best_r", "Correlación en ese rezago", best?.forward ?? null, "corr", `${IE} + ${BQ}`);
-  add("lag_best_n", "Pares de días usados en la correlación", best?.n ?? null, "count", `${IE} + ${BQ}`);
-  add("lag_reverse_best_r", "Mejor correlación en sentido inverso (cuentas activas → 1Click)", bestReverse?.reverse ?? null, "corr", `${IE} + ${BQ}`);
-  add("lag_zero_r", "Correlación sin rezago", lag[0]?.forward ?? null, "corr", `${IE} + ${BQ}`);
+  add("lag_best_days", "Lag with the highest correlation (1Click to active accounts)", best?.lag ?? null, "days", `${IE} + ${BQ}`);
+  add("lag_best_r", "Correlation at that lag", best?.forward ?? null, "corr", `${IE} + ${BQ}`);
+  add("lag_best_n", "Day pairs used in the correlation", best?.n ?? null, "count", `${IE} + ${BQ}`);
+  add("lag_reverse_best_r", "Best reverse correlation (active accounts to 1Click)", bestReverse?.reverse ?? null, "corr", `${IE} + ${BQ}`);
+  add("lag_zero_r", "Correlation with no lag", lag[0]?.forward ?? null, "corr", `${IE} + ${BQ}`);
 
   const spikes = classifySpikes(inputs);
-  add("spikes_total", "Días con salto de cuentas activas sobre el umbral", spikes.length, "count", `${BQ} · transactions`);
-  add("spikes_pico", "Saltos clasificados como pico (no estructurales)", spikes.filter((s) => s.classification === "pico").length, "count", `${BQ} · transactions`);
+  add("spikes_total", "Days with an active-account jump above the threshold", spikes.length, "count", `${BQ} · transactions`);
+  add("spikes_nonstructural", "Jumps classified as spikes (not structural)", spikes.filter((s) => s.classification === "spike").length, "count", `${BQ} · transactions`);
 
   const weeks = [...inputs.bearyWeekly].sort((a, b) => a.from.localeCompare(b.from));
   const last = weeks.at(-1);
   const prev = weeks.at(-2);
-  add("sentiment_index_last_week", "Índice de sentimiento ponderado por credibilidad (última semana)", last?.sentiment_index ?? null, "index", "Beary · xAI x_search");
-  add("sentiment_index_prev_week", "Índice de sentimiento (semana previa)", prev?.sentiment_index ?? null, "index", "Beary · xAI x_search");
-  add("beary_posts_last_week", "Posts verificados (última semana)", last?.post_count ?? null, "count", "Beary · xAI x_search");
+  add("sentiment_index_last_week", "Credibility-weighted sentiment index (last week)", last?.sentiment_index ?? null, "index", "Beary · xAI x_search");
+  add("sentiment_index_prev_week", "Sentiment index (previous week)", prev?.sentiment_index ?? null, "index", "Beary · xAI x_search");
+  add("beary_posts_last_week", "Verified posts (last week)", last?.post_count ?? null, "count", "Beary · xAI x_search");
   const kept = sum(inputs.bearyDaily.map((d) => d.posts.length));
   const dropped = sum(inputs.bearyDaily.map((d) => d.discarded.length));
-  add("beary_discard_share", "Posts descartados por el control de citas, cuentas o fechas", kept + dropped ? (dropped / (kept + dropped)) * 100 : null, "pct", "Beary · verificación");
-  add("beary_weeks", "Semanas analizadas por Beary", weeks.length, "count", "Beary");
-  add("beary_weeks_reconstructed", "Semanas reconstruidas (no corridas en vivo)", weeks.filter((w) => w.reconstructed).length, "count", "Beary");
+  add("beary_discard_share", "Posts discarded by the citation, account or date checks", kept + dropped ? (dropped / (kept + dropped)) * 100 : null, "pct", "Beary · verification");
+  add("beary_weeks", "Weeks analyzed by Beary", weeks.length, "count", "Beary");
+  add("beary_weeks_reconstructed", "Weeks reconstructed (not run live)", weeks.filter((w) => w.reconstructed).length, "count", "Beary");
 
   const div = divergences(inputs);
-  add("mirage_weeks", "Semanas marcadas como espejismo", div.filter((d) => d.quadrant === "espejismo").length, "count", "Bul · divergencias");
+  add("mirage_weeks", "Weeks flagged as a mirage", div.filter((d) => d.quadrant === "mirage").length, "count", "Bul · divergences");
 
   const regime =
-    regimeGap === null ? "sin datos" : regimeGap > PARAMS.regime_band_pct ? "expansión" : regimeGap < -PARAMS.regime_band_pct ? "contracción" : "lateral";
+    regimeGap === null ? "no data" : regimeGap > PARAMS.regime_band_pct ? "expansion" : regimeGap < -PARAMS.regime_band_pct ? "contraction" : "sideways";
   const shift = (m.intents_call_share_change_pp?.value ?? 0) > 0 && (m.growth_gap_pp?.value ?? 0) > 0;
   const leads = best !== undefined && (best.forward ?? 0) >= PARAMS.lag_min_r && (best.forward ?? 0) > (bestReverse?.reverse ?? 0);
-  const verdict = shift && leads ? "respaldada por los datos actuales" : shift || leads ? "parcialmente respaldada" : "no respaldada por los datos actuales";
-  const strength = (r: number | null) => (r === null ? "sin datos" : Math.abs(r) < 0.3 ? "débil" : Math.abs(r) < 0.6 ? "moderada" : "fuerte");
+  const verdict = shift && leads ? "supported by current data" : shift || leads ? "partially supported" : "not supported by current data";
+  const strength = (r: number | null) => (r === null ? "no data" : Math.abs(r) < 0.3 ? "weak" : Math.abs(r) < 0.6 ? "moderate" : "strong");
 
   const labels = Object.fromEntries(
     [
-      ["mode", inputs.mode === "mock" ? "SIMULADO (mock)" : "datos reales (live)"],
+      ["mode", inputs.mode === "mock" ? "SIMULATED (mock)" : "real data (live)"],
       ["generated_at", generatedAt.slice(0, 10)],
-      ["last_block_date", manifest.freshness.last_block_date ?? "desconocida"],
+      ["last_block_date", manifest.freshness.last_block_date ?? "unknown"],
       ["window_start", manifest.window.start],
       ["window_end", manifest.window.end],
       ["regime", regime],
       ["hypothesis_verdict", verdict],
-      ["shift_status", shift ? "se observa" : "no se observa"],
-      ["lead_status", leads ? "se observa" : "no se observa"],
+      ["shift_status", shift ? "observed" : "not observed"],
+      ["lead_status", leads ? "observed" : "not observed"],
       ["lag_strength", strength(best?.forward ?? null)],
     ].map(([id, value]) => [id, { id: id as string, value: value as string }]),
   );

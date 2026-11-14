@@ -44,12 +44,12 @@ const BundleShape = z.looseObject({
 
 export function parseBundle(json: unknown): Bundle {
   const res = BundleShape.safeParse(json);
-  if (!res.success) throw new Error(`bundle.json inválido: ${res.error.issues[0]?.message ?? "forma desconocida"}`);
+  if (!res.success) throw new Error(`Invalid bundle.json: ${res.error.issues[0]?.message ?? "unknown shape"}`);
   return json as Bundle;
 }
 
 export async function loadBundle(fetchImpl: typeof fetch = fetch): Promise<Bundle> {
   const res = await fetchImpl("./data/bundle.json");
-  if (!res.ok) throw new Error(`No se pudo cargar data/bundle.json (${res.status}). Corre \`pnpm bul:build\`.`);
+  if (!res.ok) throw new Error(`Could not load data/bundle.json (${res.status}). Run \`pnpm bul:build\`.`);
   return parseBundle(await res.json());
 }

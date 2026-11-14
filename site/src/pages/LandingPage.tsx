@@ -17,28 +17,28 @@ const MOTES = Array.from({ length: 26 }, (_, i) => ({
 
 const FAQS = [
   {
-    q: "¿Qué es este ágora?",
-    a: "Un foro de tres pensadores. Beary lee Notion (TickersInfo, X Creative Output, X Account Analyses) y cuentas fijas de X, Bison consulta BigQuery y 1Click Swap, Bul cruza ambas lecturas y escribe la tesis. Cada uno se evalúa por separado: entradas, salidas y validaciones.",
+    q: "What is this agora?",
+    a: "A forum of three thinkers. Beary reads Notion (TickersInfo, X Creative Output, X Account Analyses) and a fixed list of X accounts, Bison queries BigQuery and 1Click Swap, and Bul crosses both readings and writes the thesis. Each is evaluated separately: inputs, outputs and validations.",
   },
   {
-    q: "¿Por qué ninguna cifra está escrita a mano?",
-    a: "THESIS.md y las frases de los gráficos solo tienen placeholders. pnpm verify los rellena con métricas calculadas y falla si queda un dígito suelto.",
+    q: "Why is no figure written by hand?",
+    a: "THESIS.md and the chart sentences contain only placeholders. pnpm verify fills them with computed metrics and fails if a stray digit is left.",
   },
   {
-    q: "¿Qué hipótesis se debate?",
-    a: "Que el uso de NEAR se desplaza a la ejecución cross-chain (1Click Swap sobre Intents) y que ese volumen anticipa las cuentas activas y el uso de contratos.",
+    q: "Which hypothesis is debated?",
+    a: "That NEAR usage is shifting to cross-chain execution (1Click Swap on Intents) and that this volume leads active accounts and contract usage.",
   },
   {
-    q: "¿Qué es un espejismo?",
-    a: "Una semana en la que el sentimiento de Beary sube y las cuentas activas de Bison no lo acompañan. Un rally sin confirmación on-chain no mueve la tesis.",
+    q: "What is a mirage?",
+    a: "A week in which Beary's sentiment rises and Bison's active accounts do not follow. A rally without on-chain confirmation does not move the thesis.",
   },
   {
-    q: "¿Qué no se puede medir?",
-    a: "Precio, TVL, fees en USD, volumen total de Intents (el Explorer solo cubre 1Click) y humanos únicos. Eso está escrito en la tesis, no se inventa.",
+    q: "What cannot be measured?",
+    a: "Price, TVL, USD fees, total Intents volume (the Explorer only covers 1Click) and unique humans. That is written in the thesis; it is not invented.",
   },
   {
-    q: "¿Cómo se reconstruye?",
-    a: "pnpm demo para el escenario simulado. Con credenciales, pnpm refresh baja datos reales y pnpm bul:build regenera tesis, gráficos y este sitio.",
+    q: "How is it rebuilt?",
+    a: "pnpm demo for the simulated scenario. With credentials, pnpm refresh downloads real data and pnpm bul:build regenerates the thesis, the charts and this site.",
   },
 ];
 
@@ -93,51 +93,51 @@ export function LandingPage({ bundle }: { bundle: Bundle }) {
         <header className="world-top">
           <div className="world-brand">
             <a href="#/" className="world-logo">NEAR RDC</a>
-            <p className="world-by">Ágora · tres pensadores</p>
+            <p className="world-by">Agora · three thinkers</p>
           </div>
           <Countdown />
         </header>
 
         <div className="hero-grid">
           <div className="world-copy">
-            <p className="world-kicker">ágora — la fianza de la tesis, dada en el foro.</p>
+            <p className="world-kicker">agora — the thesis's bond, given in the forum.</p>
             <h1>{copy.title}</h1>
-            <p className="world-quote">«El que no trae evidencia no habla.»</p>
+            <p className="world-quote">“Whoever brings no evidence does not speak.”</p>
             <p>{copy.lede}</p>
             <ForumBar />
             <p className="cta-note">
-              <span className="live-dot" /> {bundle.mode === "mock" ? "datos simulados" : "datos reales"} · {bundle.generated_at.slice(0, 10)}
+              <span className="live-dot" /> {bundle.mode === "mock" ? "simulated data" : "real data"} · {bundle.generated_at.slice(0, 10)}
             </p>
-            <button type="button" className="scroll-cue" onClick={() => scrollToId("follow")}>Seguir un expediente ↓</button>
+            <button type="button" className="scroll-cue" onClick={() => scrollToId("follow")}>Follow a file ↓</button>
           </div>
 
           <aside className="verdict-card">
             <div className="verdict-card-top">
-              <span><i className="live-dot" /> Tesis en el ágora</span>
+              <span><i className="live-dot" /> Thesis in the agora</span>
               <em>{bundle.mode === "mock" ? "mock" : "live"}</em>
             </div>
-            <strong className="verdict-main">{bundle.hypothesis_verdict ?? "sin datos"}</strong>
+            <strong className="verdict-main">{bundle.hypothesis_verdict ?? "no data"}</strong>
             <dl className="verdict-dl">
               <div>
-                <dt>Régimen</dt>
+                <dt>Regime</dt>
                 <dd>{bundle.regime ?? "—"}</dd>
               </div>
               <div>
-                <dt>Última semana</dt>
+                <dt>Last week</dt>
                 <dd>{lastWeek ? lastWeek.quadrant : "—"}</dd>
               </div>
               <div>
-                <dt>Validaciones</dt>
-                <dd>{checks.ok} OK · {checks.warn} atención · {checks.fail} falla</dd>
+                <dt>Validations</dt>
+                <dd>{checks.ok} OK · {checks.warn} warning · {checks.fail} fail</dd>
               </div>
             </dl>
-            <a className="verdict-link" href="#/tesis">Leer la tesis completa →</a>
+            <a className="verdict-link" href="#/thesis">Read the full thesis →</a>
           </aside>
         </div>
 
         <div className="orchestra">
-          <button type="button" className="actor actor-beary" onClick={() => scrollToId("razonamiento-beary")}>
-            <span className="bubble">X no es dato</span>
+          <button type="button" className="actor actor-beary" onClick={() => scrollToId("reasoning-beary")}>
+            <span className="bubble">X is not data</span>
             <SpriteBeary />
             <strong>Beary</strong>
           </button>
@@ -145,31 +145,31 @@ export function LandingPage({ bundle }: { bundle: Bundle }) {
             <SpriteTablet />
             <strong>Estela</strong>
           </div>
-          <button type="button" className="actor actor-bison" onClick={() => scrollToId("razonamiento-bison")}>
+          <button type="button" className="actor actor-bison" onClick={() => scrollToId("reasoning-bison")}>
             <span className="bubble">block_date</span>
             <SpriteBison />
             <strong>Bison</strong>
           </button>
-          <button type="button" className="actor actor-bul" onClick={() => scrollToId("razonamiento-bul")}>
-            <span className="bubble">{bundle.hypothesis_verdict ?? "síntesis"}</span>
+          <button type="button" className="actor actor-bul" onClick={() => scrollToId("reasoning-bul")}>
+            <span className="bubble">{bundle.hypothesis_verdict ?? "synthesis"}</span>
             <SpriteBul />
             <strong>Bul</strong>
           </button>
         </div>
 
         <button type="button" className="ask" onClick={() => setFaq(true)}>
-          <span>?</span> Tengo una pregunta
+          <span>?</span> I have a question
         </button>
       </div>
 
       <div className="meander" aria-hidden="true" />
 
-      <section className="forum" id="razonamiento">
+      <section className="forum" id="reasoning">
         <AgoraFlow bundle={bundle} />
       </section>
 
       {faq && (
-        <Overlay title="Preguntas" onClose={() => setFaq(false)}>
+        <Overlay title="Questions" onClose={() => setFaq(false)}>
           {FAQS.map((item, i) => (
             <div key={item.q} className="faq">
               <button type="button" className="faq-q" aria-expanded={openFaq === i} onClick={() => setOpenFaq(openFaq === i ? -1 : i)}>
@@ -180,8 +180,8 @@ export function LandingPage({ bundle }: { bundle: Bundle }) {
             </div>
           ))}
           <div className="overlay-actions">
-            <a className="cta" href="#/metodologia">Metodología</a>
-            <a className="cta cta-ghost" href="#/tesis">Tesis</a>
+            <a className="cta" href="#/methodology">Methodology</a>
+            <a className="cta cta-ghost" href="#/thesis">Thesis</a>
           </div>
         </Overlay>
       )}
