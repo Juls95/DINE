@@ -27,7 +27,7 @@
     "check": "pnpm lint && pnpm typecheck && pnpm test"
   },
   "dependencies": {
-    "@google-cloud/bigquery": "9.5.0",
+    "@google-cloud/bigquery": "9.6.0",
     "debug": "4.4.3",
     "react": "19.3.1",
     "react-dom": "19.3.1",
