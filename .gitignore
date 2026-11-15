@@ -25,6 +25,10 @@ service-account*.json
 # Generated site bundle
 /site/public/data/
 
+# Unused local font files (site uses Cinzel + IBM Plex Mono only)
+/site/src/assets/fonts/anton-*.woff2
+/site/src/assets/fonts/press-*.woff2
+
 # OS / editor
 .DS_Store
 *.log
